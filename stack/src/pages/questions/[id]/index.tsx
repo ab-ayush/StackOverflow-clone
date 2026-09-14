@@ -1,0 +1,18 @@
+import QuestionDetail from "@/src/components/QuestionDetail";
+import Mainlayout from "@/src/layout/Mainlayout";
+import { useRouter } from "next/router";
+import React from "react";
+
+const index = () => {
+  const router = useRouter();
+  const { id } = router.query;
+  return (
+    <Mainlayout>
+      <div>
+        <QuestionDetail questionId={Array.isArray(id) ? id[0] : id} />
+      </div>
+    </Mainlayout>
+  );
+};
+
+export default index;

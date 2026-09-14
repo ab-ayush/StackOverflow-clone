@@ -1,0 +1,28 @@
+
+# Environment variables / secrets
+.env
+*.env
+atlas-credentials.env
+
+# Dependencies
+node_modules/
+server/node_modules/
+stack/node_modules/
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
