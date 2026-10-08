@@ -1,7 +1,12 @@
 import { Avatar, AvatarFallback } from "@/src/components/ui/avatar";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,10 +20,13 @@ import { Textarea } from "@/src/components/ui/textarea";
 import Mainlayout from "@/src/layout/Mainlayout";
 import { useAuth } from "@/src/lib/AuthContext";
 import axiosInstance from "@/src/lib/axiosinstance";
+import SessionList from "@/src/components/SessionList";
 import { Calendar, Edit, Plus, X } from "lucide-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import ReputationActivity from "@/src/components/ReputationActivity";
+import ReputationTransfer from "@/src/components/ReputationTransfer";
 const getUserData = (id: string) => {
   const users = {
     "1": {
@@ -40,7 +48,7 @@ const getUserData = (id: string) => {
   return users[id as keyof typeof users] || users["1"];
 };
 const index = () => {
-  const { user } = useAuth();
+  const { user, ChangePassword } = useAuth();
   const router = useRouter();
   const { id } = router.query;
   const [users, setusers] = useState<any>(null);
@@ -52,6 +60,8 @@ const index = () => {
     tags: users?.tags || [],
   });
   const [newTag, setNewTag] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
     const fetchuser = async () => {
@@ -67,6 +77,16 @@ const index = () => {
     };
     fetchuser();
   }, [id]);
+  useEffect(() => {
+    if (users) {
+      setEditForm({
+        name: users.name || "",
+        about: users.about || "",
+        tags: users.tags || [],
+      });
+    }
+  }, [users]);
+
   if (loading) {
     return (
       <Mainlayout>
@@ -114,6 +134,15 @@ const index = () => {
       ...editForm,
       tags: editForm.tags.filter((tag: any) => tag !== tagToRemove),
     });
+  };
+  const handleChangePassword = async () => {
+    if (!oldPassword || !newPassword) {
+      toast.error("Both fields are required");
+      return;
+    }
+    await ChangePassword({ oldPassword, newPassword });
+    setOldPassword("");
+    setNewPassword("");
   };
 
   const currentUserId = user?._id;
@@ -246,6 +275,44 @@ const index = () => {
                         </div>
                       </div>
 
+                      {/* Change Password Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">
+                          Change Password
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="oldPassword">
+                              Current Password
+                            </Label>
+                            <Input
+                              id="oldPassword"
+                              type="password"
+                              value={oldPassword}
+                              onChange={(e) => setOldPassword(e.target.value)}
+                              placeholder="Enter current password"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="newPassword">New Password</Label>
+                            <Input
+                              id="newPassword"
+                              type="password"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              placeholder="Enter new password"
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          onClick={handleChangePassword}
+                          variant="outline"
+                          className="bg-orange-600 text-white"
+                        >
+                          Update Password
+                        </Button>
+                      </div>
+
                       {/* Action Buttons */}
                       <div className="flex justify-end gap-3 pt-4 border-t">
                         <Button
@@ -275,6 +342,12 @@ const index = () => {
               </div>
             </div>
             <div className="flex flex-wrap items-center space-x-6 text-sm">
+              <div className="flex items-center">
+                <span className="font-semibold text-lg text-blue-700">
+                  {users.reputation ?? 0}
+                </span>
+                <span className="text-gray-600 ml-1">reputation</span>
+              </div>
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
                 <span className="font-semibold">5</span>
@@ -333,6 +406,9 @@ const index = () => {
                 </div>
               </CardContent>
             </Card>
+            {isOwnProfile && <SessionList />}
+            <ReputationActivity userId={users._id} />
+            {isOwnProfile && <ReputationTransfer />}
           </div>
         </div>
       </div>

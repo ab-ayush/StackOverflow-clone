@@ -13,14 +13,18 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import DeviceOtpVerify from "@/src/components/DeviceOtpVerify";
 
 const index = () => {
   const router = useRouter();
   const { Login, loading } = useAuth();
   const [form, setform] = useState({ email: "", password: "" });
+  const [otpStage, setOtpStage] = useState<{ deviceId: string } | null>(null);
+
   const handleChange = (e: any) => {
     setform({ ...form, [e.target.id]: e.target.value });
   };
+
   const handlesubmit = async (e: any) => {
     e.preventDefault();
     if (!form.email || !form.password) {
@@ -28,12 +32,26 @@ const index = () => {
       return;
     }
     try {
-      await Login(form);
+      const result = await Login(form);
+      if (result?.requiresOtp) {
+        setOtpStage({ deviceId: result.deviceId });
+        return;
+      }
       router.push("/");
     } catch (error) {
       console.log(error);
     }
   };
+
+  if (otpStage) {
+    return (
+      <DeviceOtpVerify
+        email={form.email}
+        deviceId={otpStage.deviceId}
+        onVerified={() => router.push("/")}
+      />
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -142,7 +160,10 @@ const index = () => {
                 {loading ? "loading" : "Log in"}
               </Button>
               <div className="text-center text-sm">
-                <Link href="#" className="text-blue-600 hover:underline">
+                <Link
+                  href="/forgot-password"
+                  className="text-blue-600 hover:underline"
+                >
                   Forgot your password?
                 </Link>
               </div>

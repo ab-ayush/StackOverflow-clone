@@ -7,5 +7,9 @@ const userschema = mongoose.Schema({
   about: { type: String },
   tags: { type: [String] },
   joinDate: { type: Date, default: Date.now },
+  lastPasswordResetRequest: { type: Date, default: null },
+  isAdmin: { type: Boolean, default: false },
+  reputation: { type: Number, default: 0 },
+  profileCompletionBonusAwarded: { type: Boolean, default: false },
 });
 export default mongoose.model("user", userschema);

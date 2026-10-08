@@ -11,12 +11,17 @@ const questionschema = mongoose.Schema(
     userposted: { type: String },
     userid: { type: String },
     askedon: { type: Date, default: Date.now },
+    askerBonusAwarded: { type: Boolean, default: false },
     answer: [
       {
         answerbody: String,
         useranswered: String,
         userid: String,
         answeredon: { type: Date, default: Date.now },
+        accepted: { type: Boolean, default: false },
+        upvote: { type: [String], default: [] },
+        downvote: { type: [String], default: [] },
+        bonusAwarded: { type: Boolean, default: false },
       },
     ],
   },

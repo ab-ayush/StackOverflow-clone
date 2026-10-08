@@ -13,13 +13,17 @@
   "type": "module",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "geoip-lite": "^2.0.3",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.6.0",
     "mongoos": "^0.0.1-security",
     "mongoose": "^9.10.0",
-    "nodemon": "^3.1.14"
+    "nodemailer": "^10.0.10",
+    "nodemon": "^3.1.14",
+    "ua-parser-js": "^2.0.10"
   }
 }

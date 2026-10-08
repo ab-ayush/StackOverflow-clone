@@ -1,13 +1,11 @@
-
 # Environment variables / secrets
 .env
+.env.*
 *.env
 atlas-credentials.env
 
 # Dependencies
 node_modules/
-server/node_modules/
-stack/node_modules/
 
 # Build output
 dist/
@@ -26,3 +24,6 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# One-off dev scripts with hardcoded personal emails
+server/scripts/

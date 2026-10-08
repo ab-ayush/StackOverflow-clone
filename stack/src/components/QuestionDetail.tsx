@@ -262,7 +262,7 @@ const QuestionDetail = ({ questionId }: any) => {
       try {
         const res = await axiosInstance.get("/question/getallquestion");
         const matchedquestion = res.data.data.find(
-          (u: any) => u._id === questionId
+          (u: any) => u._id === questionId,
         );
         setanswer(matchedquestion.answer);
         setquestion(matchedquestion);
@@ -286,10 +286,10 @@ const QuestionDetail = ({ questionId }: any) => {
   }
 
   const handleVote = async (vote: String) => {
-    if(!user){
-      toast.info("Please login to continue")
-      router.push("/auth")
-      return
+    if (!user) {
+      toast.info("Please login to continue");
+      router.push("/auth");
+      return;
     }
     try {
       const res = await axiosInstance.patch(`/question/vote/${question._id}`, {
@@ -309,10 +309,10 @@ const QuestionDetail = ({ questionId }: any) => {
     setquestion((prev: any) => ({ ...prev, isBookmarked: !prev.isBookmarked }));
   };
   const handleSubmitanswer = async () => {
-    if(!user){
-      toast.info("Please login to continue")
-      router.push("/auth")
-      return
+    if (!user) {
+      toast.info("Please login to continue");
+      router.push("/auth");
+      return;
     }
     if (!newanswer.trim()) return;
     setisSubmitting(true);
@@ -324,7 +324,7 @@ const QuestionDetail = ({ questionId }: any) => {
           answerbody: newanswer,
           useranswered: user.name,
           userid: user._id,
-        }
+        },
       );
       if (res.data.data) {
         const newObj = {
@@ -349,16 +349,16 @@ const QuestionDetail = ({ questionId }: any) => {
     }
   };
   const handleDelete = async () => {
-    if(!user){
-      toast.info("Please login to continue")
-      router.push("/auth")
-      return
+    if (!user) {
+      toast.info("Please login to continue");
+      router.push("/auth");
+      return;
     }
     if (!window.confirm("Are you sure you want to delete this question?"))
       return;
     try {
       const res = await axiosInstance.delete(
-        `/question/delete/${question._id}`
+        `/question/delete/${question._id}`,
       );
       if (res.data.message) {
         toast.success(res.data.message);
@@ -370,13 +370,12 @@ const QuestionDetail = ({ questionId }: any) => {
     }
   };
   const handleDeleteanswer = async (id: String) => {
-    if(!user){
-      toast.info("Please login to continue")
-      router.push("/auth")
-      return
-    }
-    if (!window.confirm("Are you sure you want to delete this answer?"))
+    if (!user) {
+      toast.info("Please login to continue");
+      router.push("/auth");
       return;
+    }
+    if (!window.confirm("Are you sure you want to delete this answer?")) return;
     try {
       const res = await axiosInstance.delete(`/answer/delete/${question._id}`, {
         data: {
@@ -386,7 +385,7 @@ const QuestionDetail = ({ questionId }: any) => {
       });
       if (res.data.data) {
         const updateanswer = question.answer.filter(
-          (ans: any) => ans._id !== id
+          (ans: any) => ans._id !== id,
         );
         setquestion((prev: any) => ({
           ...prev,
@@ -398,6 +397,110 @@ const QuestionDetail = ({ questionId }: any) => {
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete question");
+    }
+  };
+  const handleAcceptAnswer = async (answerId: string) => {
+    if (!user) {
+      toast.info("Please login to continue");
+      router.push("/auth");
+      return;
+    }
+    try {
+      const res = await axiosInstance.patch(`/answer/accept/${question._id}`, {
+        answerid: answerId,
+        userid: user._id,
+      });
+      if (res.data.data) {
+        setquestion(res.data.data);
+        toast.success("Answer status updated");
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to update answer");
+    }
+  };
+  const handleAnswerVote = async (answerId: string, vote: string) => {
+    if (!user) {
+      toast.info("Please login to continue");
+      router.push("/auth");
+      return;
+    }
+    try {
+      const res = await axiosInstance.patch(`/answer/vote/${question._id}`, {
+        answerid: answerId,
+        value: vote,
+        userid: user._id,
+      });
+      if (res.data.data) {
+        setquestion(res.data.data);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to vote on answer");
+    }
+  };
+  const handleAdminDeleteQuestion = async () => {
+    if (!window.confirm("Remove this question for guideline violations?"))
+      return;
+    try {
+      const res = await axiosInstance.delete(`/question/admin/${question._id}`);
+      if (res.data.message) {
+        toast.success(res.data.message);
+        router.push("/");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to remove question");
+    }
+  };
+  const handleAdminDeleteAnswer = async (answerId: string) => {
+    if (!window.confirm("Remove this answer for guideline violations?")) return;
+    try {
+      const res = await axiosInstance.delete(`/answer/admin/${question._id}`, {
+        data: { answerid: answerId },
+      });
+      if (res.data.message) {
+        toast.success(res.data.message);
+        const updateanswer = question.answer.filter(
+          (ans: any) => ans._id !== answerId,
+        );
+        setquestion((prev: any) => ({ ...prev, answer: updateanswer }));
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to remove answer");
+    }
+  };
+  const handleReport = async (
+    contentType: "question" | "answer",
+    contentId: string,
+    relatedQuestion?: string,
+  ) => {
+    if (!user) {
+      toast.info("Please login to continue");
+      router.push("/auth");
+      return;
+    }
+    if ((user.reputation || 0) < 500) {
+      toast.info("You need at least 500 reputation to report content");
+      return;
+    }
+    const reason = window.prompt("Why are you reporting this content?");
+    if (!reason || !reason.trim()) return;
+
+    try {
+      const res = await axiosInstance.post("/report/submit", {
+        contentType,
+        contentId,
+        relatedQuestion,
+        reason,
+      });
+      if (res.data.message) {
+        toast.success(res.data.message);
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to submit report");
     }
   };
 
@@ -473,22 +576,22 @@ const QuestionDetail = ({ questionId }: any) => {
                     __html: question.questionbody
                       .replace(
                         /## (.*)/g,
-                        '<h3 class="text-lg font-semibold mt-6 mb-3 text-gray-900">$1</h3>'
+                        '<h3 class="text-lg font-semibold mt-6 mb-3 text-gray-900">$1</h3>',
                       )
                       .replace(
                         /```(\w+)?\n([\s\S]*?)```/g,
-                        '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code class="text-sm">$2</code></pre>'
+                        '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code class="text-sm">$2</code></pre>',
                       )
                       .replace(
                         /`([^`]+)`/g,
-                        '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>'
+                        '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>',
                       )
                       .replace(/\n\n/g, '</p><p class="mb-4">')
                       .replace(/^/, '<p class="mb-4">')
                       .replace(/$/, "</p>")
                       .replace(
                         /\n(\d+\. .*)/g,
-                        '<ol class="list-decimal list-inside my-4"><li>$1</li></ol>'
+                        '<ol class="list-decimal list-inside my-4"><li>$1</li></ol>',
                       ),
                   }}
                 />
@@ -518,6 +621,7 @@ const QuestionDetail = ({ questionId }: any) => {
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => handleReport("question", question._id)}
                     className="text-gray-600 hover:text-gray-800"
                   >
                     <Flag className="w-4 h-4 mr-1" />
@@ -532,6 +636,17 @@ const QuestionDetail = ({ questionId }: any) => {
                     >
                       <Trash className="w-4 h-4 mr-1" />
                       Delete
+                    </Button>
+                  )}
+                  {user?.isAdmin && question.userid !== user?._id && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleAdminDeleteQuestion}
+                      className="text-red-800 hover:text-red-900"
+                    >
+                      <Trash className="w-4 h-4 mr-1" />
+                      Remove (Admin)
                     </Button>
                   )}
                 </div>
@@ -571,6 +686,28 @@ const QuestionDetail = ({ questionId }: any) => {
             <Card key={ans._id} className={""}>
               <CardContent className="p-0">
                 <div className="flex flex-col sm:flex-row">
+                  {/* Answer Voting Section */}
+                  <div className="flex sm:flex-col items-center sm:items-center p-4 sm:p-6 border-b sm:border-b-0 sm:border-r border-gray-200">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-2 text-gray-600 hover:text-orange-500"
+                      onClick={() => handleAnswerVote(ans._id, "upvote")}
+                    >
+                      <ChevronUp className="w-5 h-5" />
+                    </Button>
+                    <span>
+                      {(ans.upvote?.length || 0) - (ans.downvote?.length || 0)}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-2 text-gray-600 hover:text-orange-500"
+                      onClick={() => handleAnswerVote(ans._id, "downvote")}
+                    >
+                      <ChevronDown className="w-5 h-5" />
+                    </Button>
+                  </div>
                   {/* Answer Content */}
                   <div className="flex-1 p-4 sm:p-6">
                     <div className="prose max-w-none mb-6">
@@ -580,22 +717,22 @@ const QuestionDetail = ({ questionId }: any) => {
                           __html: ans.answerbody
                             .replace(
                               /## (.*)/g,
-                              '<h3 class="text-lg font-semibold mt-6 mb-3 text-gray-900">$1</h3>'
+                              '<h3 class="text-lg font-semibold mt-6 mb-3 text-gray-900">$1</h3>',
                             )
                             .replace(
                               /```(\w+)?\n([\s\S]*?)```/g,
-                              '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code class="text-sm">$2</code></pre>'
+                              '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code class="text-sm">$2</code></pre>',
                             )
                             .replace(
                               /`([^`]+)`/g,
-                              '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>'
+                              '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>',
                             )
                             .replace(/\n\n/g, '</p><p class="mb-4">')
                             .replace(/^/, '<p class="mb-4">')
                             .replace(/$/, "</p>")
                             .replace(
                               /\n(\d+\. .*)/g,
-                              '<ol class="list-decimal list-inside my-4"><li>$1</li></ol>'
+                              '<ol class="list-decimal list-inside my-4"><li>$1</li></ol>',
                             ),
                         }}
                       />
@@ -613,6 +750,9 @@ const QuestionDetail = ({ questionId }: any) => {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() =>
+                            handleReport("answer", ans._id, question._id)
+                          }
                           className="text-gray-600 hover:text-gray-800"
                         >
                           <Flag className="w-4 h-4 mr-1" />
@@ -627,6 +767,31 @@ const QuestionDetail = ({ questionId }: any) => {
                           >
                             <Trash className="w-4 h-4 mr-1" />
                             Delete
+                          </Button>
+                        )}
+                        {question.userid === user?._id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAcceptAnswer(ans._id)}
+                            className={
+                              ans.accepted
+                                ? "text-green-700 hover:text-green-800"
+                                : "text-gray-600 hover:text-gray-800"
+                            }
+                          >
+                            {ans.accepted ? "✓ Accepted" : "Accept"}
+                          </Button>
+                        )}
+                        {user?.isAdmin && ans.userid !== user?._id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAdminDeleteAnswer(ans._id)}
+                            className="text-red-800 hover:text-red-900"
+                          >
+                            <Trash className="w-4 h-4 mr-1" />
+                            Remove (Admin)
                           </Button>
                         )}
                       </div>
