@@ -16,6 +16,7 @@ export default function ReputationActivity({ userId }: { userId: string }) {
     profile_completed: "Completed profile",
     admin_removed_question: "Question removed by admin",
     admin_removed_answer: "Answer removed by admin",
+    admin_removed_post: "Post removed by admin",
     reputation_transfer_sent: "Sent reputation to another user",
     reputation_transfer_received: "Received reputation from another user",
   };

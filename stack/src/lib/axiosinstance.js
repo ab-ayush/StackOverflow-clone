@@ -8,6 +8,15 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((req) => {
+  // file uploads: let the browser set multipart/form-data with the right boundary
+  if (typeof FormData !== "undefined" && req.data instanceof FormData) {
+    if (typeof req.headers.delete === "function") {
+      req.headers.delete("Content-Type");
+    } else {
+      delete req.headers["Content-Type"];
+    }
+  }
+
   if (typeof window !== "undefined") {
     const user = localStorage.getItem("user");
     if (user) {

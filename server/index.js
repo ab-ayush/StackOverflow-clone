@@ -10,7 +10,28 @@ import cookieParser from "cookie-parser";
 import reportRoutes from "./routes/report.js";
 import reputationTransferRoutes from "./routes/reputationTransfer.js";
 import reputationRoutes from "./routes/reputation.js";
+import postRoutes from "./routes/post.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import commentRoutes from "./routes/comment.js";
+import followRoutes from "./routes/follow.js";
+import notificationRoutes from "./routes/notification.js";
+import moderationRoutes from "./routes/moderation.js";
+import compression from "compression";
+
 const app = express();
+app.use(compression());
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"), {
+    maxAge: "7d",
+    setHeaders: (res) => {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+    },
+  })
+);
 app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 app.use(cookieParser());
@@ -28,6 +49,11 @@ app.use("/session", sessionRoutes)
 app.use("/report", reportRoutes)
 app.use('/reputation-transfer', reputationTransferRoutes)
 app.use('/reputation', reputationRoutes)
+app.use('/post', postRoutes)
+app.use('/comment', commentRoutes)
+app.use('/follow', followRoutes)
+app.use('/notification', notificationRoutes)
+app.use('/moderation', moderationRoutes)
 const PORT = process.env.PORT || 5000;
 const databaseurl = process.env.MONGODB_URL;
 

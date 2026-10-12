@@ -27,3 +27,4 @@ Thumbs.db
 
 # One-off dev scripts with hardcoded personal emails
 server/scripts/
+server/uploads/

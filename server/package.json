@@ -13,6 +13,7 @@
   "type": "module",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "compression": "^1.8.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -22,6 +23,7 @@
     "mongodb": "^7.6.0",
     "mongoos": "^0.0.1-security",
     "mongoose": "^9.10.0",
+    "multer": "^2.4.0",
     "nodemailer": "^10.0.10",
     "nodemon": "^3.1.14",
     "ua-parser-js": "^2.0.10"

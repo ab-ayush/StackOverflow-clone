@@ -10,6 +10,17 @@ import { sendEmail } from "../utils/sendEmail.js";
 import { getDeviceInfo } from "../utils/deviceInfo.js";
 import { setAuthCookies } from "../utils/authCookies.js";
 import { applyReputation } from "../utils/reputation.js";
+import {
+  generateUniqueUsername,
+  normalizeUsername,
+  USERNAME_REGEX,
+} from "../utils/username.js";
+
+// never send the password hash to the client
+const withoutPassword = (doc) => {
+  const { password, ...safe } = doc.toObject();
+  return safe;
+};
 
 export const Signup = async (req, res) => {
   try {
@@ -24,13 +35,14 @@ export const Signup = async (req, res) => {
       name,
       email,
       password: hashpassword,
+      username: await generateUniqueUsername(name),
     });
     const token = jwt.sign(
       { email: newuser.email, id: newuser._id },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-    res.status(200).json({ data: newuser, token });
+    res.status(200).json({ data: withoutPassword(newuser), token });
   } catch (error) {
     console.log(error);
     res.status(500).json("something went wrong..");
@@ -52,6 +64,9 @@ export const Login = async (req, res) => {
     );
     if (!ispasswordcrct) {
       return res.status(400).json({ message: "Invalid password" });
+    }
+    if (exisitinguser.suspendedAt) {
+      return res.status(403).json({ message: "Your account has been suspended" });
     }
 
     const deviceInfo = getDeviceInfo(req);
@@ -100,7 +115,7 @@ export const Login = async (req, res) => {
 
     setAuthCookies(res, { accessToken, refreshToken, deviceId });
 
-    res.status(200).json({ data: exisitinguser, token: accessToken });
+    res.status(200).json({ data: withoutPassword(exisitinguser), token: accessToken });
   } catch (error) {
     res.status(500).json("something went wrong..");
     return;
@@ -157,6 +172,9 @@ export const VerifyDeviceOtp = async (req, res) => {
     if (!exisitinguser) {
       return res.status(404).json({ message: "User does not exist" });
     }
+    if (exisitinguser.suspendedAt) {
+      return res.status(403).json({ message: "Your account has been suspended" });
+    }
 
     const record = await DeviceOtp.findOne({
       user: exisitinguser._id,
@@ -179,7 +197,7 @@ export const VerifyDeviceOtp = async (req, res) => {
     await DeviceOtp.deleteMany({ user: exisitinguser._id, deviceId });
 
     res.status(200).json({
-      data: exisitinguser,
+      data: withoutPassword(exisitinguser),
       token: accessToken,
       message: "Device verified, logged in.",
     });
@@ -216,7 +234,7 @@ async function createSessionAndTokens(exisitinguser, deviceId, deviceInfo) {
 
 export const getallusers = async (req, res) => {
   try {
-    const alluser = await user.find();
+    const alluser = await user.find().select("-password");
     res.status(200).json({ data: alluser });
   } catch (error) {
     res.status(500).json("something went wrong..");
@@ -226,14 +244,33 @@ export const getallusers = async (req, res) => {
 
 export const updateprofile = async (req, res) => {
   const { id: _id } = req.params;
-  const { name, about, tags } = req.body.editForm;
+  const { name, about, tags, username } = req.body.editForm;
   if (!mongoose.Types.ObjectId.isValid(_id)) {
     return res.status(400).json({ message: "User unavailable" });
   }
+  if (String(req.userId) !== String(_id)) {
+    return res.status(403).json({ message: "You can only edit your own profile" });
+  }
+
+  const changes = { name, about, tags };
+  if (username !== undefined && String(username).trim() !== "") {
+    const clean = normalizeUsername(username);
+    if (!USERNAME_REGEX.test(clean)) {
+      return res.status(400).json({
+        message: "Username must be 3-20 characters: letters, numbers or underscores",
+      });
+    }
+    const taken = await user.exists({ username: clean, _id: { $ne: _id } });
+    if (taken) {
+      return res.status(409).json({ message: "That username is already taken" });
+    }
+    changes.username = clean;
+  }
+
   try {
     const updateprofile = await user.findByIdAndUpdate(
       _id,
-      { $set: { name: name, about: about, tags: tags } },
+      { $set: changes },
       { new: true }
     );
 
@@ -252,14 +289,16 @@ export const updateprofile = async (req, res) => {
       });
     }
 
-    res.status(200).json({ data: updateprofile });
+    res.status(200).json({ data: withoutPassword(updateprofile) });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ message: "That username is already taken" });
+    }
     console.log(error);
     res.status(500).json("something went wrong..");
     return;
   }
 };
-
 export const ForgotPassword = async (req, res) => {
   const { email } = req.body;
   try {

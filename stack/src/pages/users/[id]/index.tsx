@@ -27,6 +27,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ReputationActivity from "@/src/components/ReputationActivity";
 import ReputationTransfer from "@/src/components/ReputationTransfer";
+import FollowStats from "@/src/components/FollowStats";
 const getUserData = (id: string) => {
   const users = {
     "1": {
@@ -56,6 +57,7 @@ const index = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     name: users?.name || "",
+    username: users?.username || "",
     about: users?.about || "",
     tags: users?.tags || [],
   });
@@ -81,6 +83,7 @@ const index = () => {
     if (users) {
       setEditForm({
         name: users.name || "",
+        username: users.username || "",
         about: users.about || "",
         tags: users.tags || [],
       });
@@ -107,6 +110,7 @@ const index = () => {
         const updatedUser = {
           ...users,
           name: editForm.name,
+          username: res.data.data.username,
           about: editForm.about,
           tags: editForm.tags,
         };
@@ -115,9 +119,9 @@ const index = () => {
         setIsEditing(false);
         toast.success("Profile updated successfully!");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      toast.error("Something went wrong");
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
 
@@ -167,6 +171,9 @@ const index = () => {
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-1">
                   {users.name}
                 </h1>
+                {users.username && (
+                  <p className="text-sm text-gray-500">@{users.username}</p>
+                )}
               </div>
 
               {isOwnProfile && (
@@ -204,6 +211,27 @@ const index = () => {
                               }
                               placeholder="Your display name"
                             />
+                          </div>
+                          <div>
+                            <Label htmlFor="username">Username</Label>
+                            <Input
+                              id="username"
+                              value={editForm.username}
+                              onChange={(e) =>
+                                setEditForm({
+                                  ...editForm,
+                                  username: e.target.value
+                                    .toLowerCase()
+                                    .replace(/[^a-z0-9_]/g, ""),
+                                })
+                              }
+                              placeholder="e.g. ayush_bisht"
+                              maxLength={20}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              3-20 letters, numbers or underscores. Used for
+                              @mentions.
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -340,6 +368,7 @@ const index = () => {
                 Member since{" "}
                 {new Date(users.joinDate).toISOString().split("T")[0]}
               </div>
+              <FollowStats userId={users._id} isOwnProfile={isOwnProfile} />
             </div>
             <div className="flex flex-wrap items-center space-x-6 text-sm">
               <div className="flex items-center">

@@ -1,5 +1,6 @@
 import { useAuth } from "@/src/lib/AuthContext";
-import { Menu, Search } from "lucide-react";
+import { useUnreadCount } from "@/src/lib/useUnreadCount";
+import { Bell, Menu, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -14,6 +15,7 @@ const Navbar = ({ handleslidein }: any) => {
   useEffect(() => {
     setHasMounted(true);
   }, []);
+  const unread = useUnreadCount(hasMounted && !!user);
   const handlelogout = () => {
     Logout();
   };
@@ -62,6 +64,21 @@ const Navbar = ({ handleslidein }: any) => {
             </Link>
           ) : (
             <>
+              <Link
+                href="/notifications"
+                aria-label={
+                  unread > 0 ? `${unread} unread notifications` : "Notifications"
+                }
+                className="relative p-2 rounded-full hover:bg-gray-100 transition"
+              >
+                <Bell className="w-5 h-5 text-gray-700" />
+                {unread > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold flex items-center justify-center">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
+              </Link>
+
               <Link
                 href={`/users/${user._id}`}
                 className="flex items-center justify-center bg-orange-600 text-white text-sm font-semibold w-9 h-9 rounded-full"
