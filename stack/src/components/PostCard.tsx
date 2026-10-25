@@ -15,19 +15,21 @@ import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import PostComposer from "./PostComposer";
 import CommentSection from "./CommentSection";
+import ReportPostDialog from "./ReportPostDialog";
+import RichText from "./RichText";
 import FollowButton from "./FollowButton";
 import { useAuth } from "@/src/lib/AuthContext";
 import { Post, PostInput } from "@/src/lib/useFeed";
 import { imageUrl } from "@/src/lib/imageUrl";
-import { timeAgo } from "@/src/lib/timeAgo";
-import RichText from "./RichText";
-import ReportPostDialog from "./ReportPostDialog";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { useFormatters } from "@/src/i18n/useFormatters";
+import type { TranslationKey } from "@/src/i18n/translate";
 
-const typeLabels: Record<string, string> = {
-  update: "Technical update",
-  snippet: "Code snippet",
-  showcase: "Project showcase",
-  achievement: "Learning achievement",
+const typeLabelKeys: Record<string, TranslationKey> = {
+  update: "composer.type.update",
+  snippet: "composer.type.snippet",
+  showcase: "composer.type.showcase",
+  achievement: "composer.type.achievement",
 };
 
 const typeColors: Record<string, string> = {
@@ -63,12 +65,15 @@ export default function PostCard({
   onDelete,
 }: PostCardProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const { relativeTime, number } = useFormatters();
   const [editing, setEditing] = useState(false);
   const [showComments, setShowComments] = useState(defaultShowComments);
   const [reporting, setReporting] = useState(false);
-  const authorName = post.author?.name || "Unknown user";
+  const authorName = post.author?.name || t("post.unknownUser");
   const images = post.images || []; // posts created before image support have no images field
   const isSelf = !!user && post.author?._id === user._id;
+  const typeKey = typeLabelKeys[post.type];
 
   if (editing && onUpdate) {
     return (
@@ -79,7 +84,7 @@ export default function PostCard({
           codeSnippet: post.codeSnippet || null,
           images,
         }}
-        submitLabel="Save"
+        submitLabel={t("composer.save")}
         onSubmit={async (input) => {
           const ok = await onUpdate(post._id, input);
           if (ok) setEditing(false);
@@ -108,14 +113,10 @@ export default function PostCard({
                     {authorName}
                   </Link>
                 ) : (
-                  <span className="font-medium text-gray-700">
-                    {authorName}
-                  </span>
+                  <span className="font-medium text-gray-700">{authorName}</span>
                 )}
                 {post.author?.username && (
-                  <span className="text-xs text-gray-500">
-                    @{post.author.username}
-                  </span>
+                  <span className="text-xs text-gray-500">@{post.author.username}</span>
                 )}
                 {post.author && onFollow && !isSelf && (
                   <FollowButton
@@ -126,14 +127,14 @@ export default function PostCard({
               </div>
               <p className="text-xs text-gray-500">
                 <Link href={`/feed/${post._id}`} className="hover:underline">
-                  {timeAgo(post.createdAt)}
+                  {relativeTime(post.createdAt)}
                 </Link>
-                {post.editedAt ? " · edited" : ""}
+                {post.editedAt ? ` · ${t("post.edited")}` : ""}
               </p>
             </div>
           </div>
           <Badge variant="secondary" className={typeColors[post.type] || ""}>
-            {typeLabels[post.type] || post.type}
+            {typeKey ? t(typeKey) : post.type}
           </Badge>
         </div>
 
@@ -154,7 +155,7 @@ export default function PostCard({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imageUrl(path)}
-                  alt="Post attachment"
+                  alt={t("post.attachment")}
                   loading="lazy"
                   decoding="async"
                   className={
@@ -170,9 +171,7 @@ export default function PostCard({
 
         {post.codeSnippet && (
           <div>
-            <p className="text-xs text-gray-500 mb-1">
-              {post.codeSnippet.language}
-            </p>
+            <p className="text-xs text-gray-500 mb-1">{post.codeSnippet.language}</p>
             <pre className="bg-gray-100 text-gray-900 p-3 rounded-lg overflow-x-auto text-sm">
               <code>{post.codeSnippet.code}</code>
             </pre>
@@ -185,7 +184,7 @@ export default function PostCard({
               variant="ghost"
               size="sm"
               onClick={() => onLike(post._id)}
-              aria-label={post.likedByMe ? "Unlike" : "Like"}
+              aria-label={post.likedByMe ? t("post.unlike") : t("post.like")}
               className={
                 post.likedByMe
                   ? "text-red-600 hover:text-red-700"
@@ -196,13 +195,13 @@ export default function PostCard({
                 className="w-4 h-4 mr-1"
                 fill={post.likedByMe ? "currentColor" : "none"}
               />
-              {post.likeCount ?? 0}
+              {number(post.likeCount ?? 0)}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowComments((v) => !v)}
-              aria-label="Comments"
+              aria-label={t("post.comments")}
               className={
                 showComments
                   ? "text-blue-600 hover:text-blue-700"
@@ -210,23 +209,25 @@ export default function PostCard({
               }
             >
               <MessageCircle className="w-4 h-4 mr-1" />
-              {post.commentCount ?? 0}
+              {number(post.commentCount ?? 0)}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onShare(post._id)}
-              aria-label="Copy link"
+              aria-label={t("post.copyLink")}
               className="text-gray-600 hover:text-blue-600"
             >
               <Share2 className="w-4 h-4 mr-1" />
-              {post.shareCount ?? 0}
+              {number(post.shareCount ?? 0)}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onBookmark(post._id)}
-              aria-label={post.bookmarkedByMe ? "Remove bookmark" : "Bookmark"}
+              aria-label={
+                post.bookmarkedByMe ? t("post.removeBookmark") : t("post.bookmark")
+              }
               className={
                 post.bookmarkedByMe
                   ? "text-yellow-500 hover:text-yellow-600"
@@ -249,32 +250,32 @@ export default function PostCard({
                 className="text-gray-600 hover:text-gray-800"
               >
                 <Edit className="w-4 h-4 mr-1" />
-                Edit
+                {t("common.edit")}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  if (window.confirm("Delete this post?")) onDelete(post._id);
+                  if (window.confirm(t("post.confirmDelete"))) onDelete(post._id);
                 }}
                 className="text-red-600 hover:text-red-800"
               >
                 <Trash className="w-4 h-4 mr-1" />
-                Delete
+                {t("common.delete")}
               </Button>
             </div>
           )}
+
           {!isSelf && !!user && !!post.author && (
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               onClick={() => setReporting(true)}
-              aria-label="Report post"
-              className="mt-1 text-gray-500 hover:text-red-600"
+              aria-label={t("post.reportPost")}
+              className="mt-1 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-gray-500 transition-all duration-200 hover:bg-red-50 hover:text-red-600 active:scale-95"
             >
-              <Flag className="w-4 h-4 mr-1" />
-              Report
-            </Button>
+              <Flag className="w-3.5 h-3.5" />
+              {t("post.report")}
+            </button>
           )}
         </div>
 
@@ -285,12 +286,9 @@ export default function PostCard({
             onCountChange={(delta) => onCommentCountChange(post._id, delta)}
           />
         )}
+
         {reporting && (
-          <ReportPostDialog
-            postId={post._id}
-            open={reporting}
-            onOpenChange={setReporting}
-          />
+          <ReportPostDialog postId={post._id} open={reporting} onOpenChange={setReporting} />
         )}
       </CardContent>
     </Card>

@@ -1,36 +1,46 @@
 import { useReputationLog } from "@/src/lib/useReputation";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { useFormatters } from "@/src/i18n/useFormatters";
+import type { TranslationKey } from "@/src/i18n/translate";
+
+const reasonKeys: Record<string, TranslationKey> = {
+  answer_posted: "reputation.reason.answer_posted",
+  answer_deleted: "reputation.reason.answer_deleted",
+  answer_accepted: "reputation.reason.answer_accepted",
+  answer_accept_revoked: "reputation.reason.answer_accept_revoked",
+  answer_5_upvotes: "reputation.reason.answer_5_upvotes",
+  question_downvoted: "reputation.reason.question_downvoted",
+  question_downvote_removed: "reputation.reason.question_downvote_removed",
+  question_10_upvotes: "reputation.reason.question_10_upvotes",
+  profile_completed: "reputation.reason.profile_completed",
+  admin_removed_question: "reputation.reason.admin_removed_question",
+  admin_removed_answer: "reputation.reason.admin_removed_answer",
+  admin_removed_post: "reputation.reason.admin_removed_post",
+  reputation_transfer_sent: "reputation.reason.reputation_transfer_sent",
+  reputation_transfer_received: "reputation.reason.reputation_transfer_received",
+};
 
 export default function ReputationActivity({ userId }: { userId: string }) {
+  const { t } = useLanguage();
+  const { date, number } = useFormatters();
   const { logs, loading } = useReputationLog(userId);
 
-  const reasonLabels: Record<string, string> = {
-    answer_posted: "Posted an answer",
-    answer_deleted: "Deleted an answer",
-    answer_accepted: "Answer was accepted",
-    answer_accept_revoked: "Answer acceptance revoked",
-    answer_5_upvotes: "Answer reached 5 upvotes",
-    question_downvoted: "Question was downvoted",
-    question_downvote_removed: "Downvote removed from question",
-    question_10_upvotes: "Question reached 10 upvotes",
-    profile_completed: "Completed profile",
-    admin_removed_question: "Question removed by admin",
-    admin_removed_answer: "Answer removed by admin",
-    admin_removed_post: "Post removed by admin",
-    reputation_transfer_sent: "Sent reputation to another user",
-    reputation_transfer_received: "Received reputation from another user",
+  const reasonText = (reason: string) => {
+    const key = reasonKeys[reason];
+    return key ? t(key) : reason;
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Reputation Activity</CardTitle>
+        <CardTitle>{t("reputation.title")}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-sm text-gray-500">Loading...</p>
+          <p className="text-sm text-gray-500">{t("common.loading")}</p>
         ) : logs.length === 0 ? (
-          <p className="text-sm text-gray-500">No reputation activity yet.</p>
+          <p className="text-sm text-gray-500">{t("reputation.empty")}</p>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {logs.map((log) => (
@@ -38,13 +48,9 @@ export default function ReputationActivity({ userId }: { userId: string }) {
                 key={log._id}
                 className="flex items-center justify-between text-sm border-b pb-2"
               >
-                <span className="text-gray-700">
-                  {reasonLabels[log.reason] || log.reason}
-                </span>
+                <span className="text-gray-700">{reasonText(log.reason)}</span>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-400">
-                    {new Date(log.createdAt).toLocaleDateString()}
-                  </span>
+                  <span className="text-xs text-gray-400">{date(log.createdAt)}</span>
                   <span
                     className={
                       log.amount >= 0
@@ -53,7 +59,7 @@ export default function ReputationActivity({ userId }: { userId: string }) {
                     }
                   >
                     {log.amount >= 0 ? "+" : ""}
-                    {log.amount}
+                    {number(log.amount)}
                   </span>
                 </div>
               </div>

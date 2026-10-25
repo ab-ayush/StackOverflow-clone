@@ -3,8 +3,10 @@ import Link from "next/link";
 import axios from "axios";
 import { Flame, Heart, MessageCircle } from "lucide-react";
 import { Post } from "@/src/lib/useFeed";
+import { useLanguage } from "@/src/i18n/LanguageContext";
 
 const TrendingNow = () => {
+  const { t } = useLanguage();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -34,7 +36,7 @@ const TrendingNow = () => {
     <div className="bg-white border border-gray-200 rounded p-3 lg:p-4">
       <h3 className="font-semibold text-gray-800 mb-3 text-sm lg:text-base flex items-center gap-1.5">
         <Flame className="w-4 h-4 text-orange-500" />
-        Trending now
+        {t("trending.title")}
       </h3>
 
       {!loaded ? (
@@ -61,7 +63,7 @@ const TrendingNow = () => {
                     </p>
                     <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-500">
                       <span className="font-medium text-gray-600 truncate max-w-[110px]">
-                        {post.author?.name ?? "Unknown user"}
+                        {post.author?.name ?? t("trending.unknownUser")}
                       </span>
                       <span className="inline-flex items-center gap-0.5">
                         <Heart className="w-3 h-3" />
@@ -81,7 +83,7 @@ const TrendingNow = () => {
             href="/feed?tab=trending"
             className="block mt-2 text-xs text-blue-600 hover:underline"
           >
-            See all trending →
+            {t("trending.seeAll")} →
           </Link>
         </>
       )}

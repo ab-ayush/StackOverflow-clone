@@ -4,10 +4,11 @@ import { Ban, Check, ExternalLink, ShieldAlert, ShieldCheck, Trash2 } from "luci
 import Mainlayout from "@/src/layout/Mainlayout";
 import { useAuth } from "@/src/lib/AuthContext";
 import { ReportGroup, useModeration } from "@/src/lib/useModeration";
-import { reasonLabel } from "@/src/lib/reportReasons";
-import { timeAgo } from "@/src/lib/timeAgo";
+import { reasonLabelKey } from "@/src/lib/reportReasons";
 import { Card, CardContent } from "@/src/components/ui/card";
 import ModerationButton from "@/src/components/ModerationButton";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { useFormatters } from "@/src/i18n/useFormatters";
 
 const REPEAT_OFFENDER_THRESHOLD = 2;
 
@@ -15,6 +16,8 @@ type Tab = "reports" | "suspended";
 
 const ModerationPage = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const { number, plural, relativeTime } = useFormatters();
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<Tab>("reports");
 
@@ -26,10 +29,23 @@ const ModerationPage = () => {
   const { reports, suspended, loading, busyKey, dismiss, removePost, suspend, unsuspend } =
     useModeration(isAdmin);
 
+  const reasonText = (reason: string) => {
+    const key = reasonLabelKey(reason);
+    return key ? t(key) : reason;
+  };
+
+  const removedText = (count: number) =>
+    t(
+      plural(count) === "one"
+        ? "moderation.removedCount.one"
+        : "moderation.removedCount.other",
+      { count: number(count) }
+    );
+
   const handleRemove = (r: ReportGroup) => {
     const reason = window.prompt(
-      "Reason for removing this post (saved in the moderation log):",
-      "Violates community guidelines"
+      t("moderation.promptRemove"),
+      t("moderation.defaultRemoveReason")
     );
     if (reason === null) return;
     removePost(r.postId, reason);
@@ -38,8 +54,8 @@ const ModerationPage = () => {
   const handleSuspend = (r: ReportGroup) => {
     if (!r.author) return;
     const reason = window.prompt(
-      `Reason for suspending ${r.author.name}:`,
-      "Repeated guideline violations"
+      t("moderation.promptSuspend", { name: r.author.name }),
+      t("moderation.defaultSuspendReason")
     );
     if (reason === null) return;
     suspend(r.author._id, reason);
@@ -59,7 +75,7 @@ const ModerationPage = () => {
           tab === name ? "bg-white/25 text-white" : "bg-red-100 text-red-700"
         }`}
       >
-        {count}
+        {number(count)}
       </span>
     );
 
@@ -68,20 +84,20 @@ const ModerationPage = () => {
       <div className="max-w-3xl space-y-4">
         <h1 className="text-xl lg:text-2xl font-semibold text-gray-900 flex items-center gap-2">
           <ShieldAlert className="w-6 h-6 text-red-600" />
-          Moderation
+          {t("moderation.heading")}
         </h1>
 
         {!mounted ? null : !isAdmin ? (
-          <p className="text-sm text-gray-600">This page is for administrators only.</p>
+          <p className="text-sm text-gray-600">{t("moderation.adminOnly")}</p>
         ) : (
           <>
             <div className="flex gap-2">
               <button className={tabClass("reports")} onClick={() => setTab("reports")}>
-                Reported posts
+                {t("moderation.tab.reports")}
                 {countBadge(reports.length, "reports")}
               </button>
               <button className={tabClass("suspended")} onClick={() => setTab("suspended")}>
-                Suspended users
+                {t("moderation.tab.suspended")}
                 {countBadge(suspended.length, "suspended")}
               </button>
             </div>
@@ -90,7 +106,7 @@ const ModerationPage = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto" />
             ) : tab === "reports" ? (
               reports.length === 0 ? (
-                <p className="text-sm text-gray-500">No reports waiting for review. 🎉</p>
+                <p className="text-sm text-gray-500">{t("moderation.noReports")}</p>
               ) : (
                 <div className="space-y-4">
                   {reports.map((r) => {
@@ -101,14 +117,19 @@ const ModerationPage = () => {
                         <CardContent className="p-4 space-y-3">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
-                              {r.reportCount} {r.reportCount === 1 ? "report" : "reports"}
+                              {t(
+                                plural(r.reportCount) === "one"
+                                  ? "moderation.reportCount.one"
+                                  : "moderation.reportCount.other",
+                                { count: number(r.reportCount) }
+                              )}
                             </span>
                             {Object.entries(r.reasonCounts).map(([reason, count]) => (
                               <span
                                 key={reason}
                                 className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-xs"
                               >
-                                {reasonLabel(reason)} × {count}
+                                {reasonText(reason)} × {number(count)}
                               </span>
                             ))}
                           </div>
@@ -133,28 +154,37 @@ const ModerationPage = () => {
                                         : "bg-orange-100 text-orange-800"
                                     }`}
                                   >
-                                    {repeat ? "Repeat offender · " : ""}
-                                    {r.author.removedPostCount} post
-                                    {r.author.removedPostCount === 1 ? "" : "s"} removed
+                                    {repeat ? `${t("moderation.repeatOffender")} · ` : ""}
+                                    {removedText(r.author.removedPostCount)}
                                   </span>
                                 )}
                                 {r.author.suspended && (
                                   <span className="px-2 py-0.5 rounded-full bg-gray-800 text-white text-xs">
-                                    Suspended
+                                    {t("moderation.suspendedBadge")}
                                   </span>
                                 )}
                               </>
                             ) : (
-                              <span className="text-gray-500">Unknown author</span>
+                              <span className="text-gray-500">
+                                {t("moderation.unknownAuthor")}
+                              </span>
                             )}
-                            <span className="text-gray-400">· posted {timeAgo(r.createdAt)}</span>
+                            <span className="text-gray-400">
+                              ·{" "}
+                              {t("moderation.posted", { time: relativeTime(r.createdAt) })}
+                            </span>
                           </div>
 
                           <p className="text-sm text-gray-800 whitespace-pre-wrap break-words bg-gray-50 border rounded-md p-3">
                             {r.content}
                             {r.imageCount > 0 && (
                               <span className="block mt-1 text-xs text-gray-500">
-                                + {r.imageCount} image{r.imageCount === 1 ? "" : "s"}
+                                {t(
+                                  plural(r.imageCount) === "one"
+                                    ? "moderation.imageCount.one"
+                                    : "moderation.imageCount.other",
+                                  { count: number(r.imageCount) }
+                                )}
                               </span>
                             )}
                           </p>
@@ -175,7 +205,7 @@ const ModerationPage = () => {
                               href={`/feed/${r.postId}`}
                               icon={<ExternalLink className="w-3.5 h-3.5" />}
                             >
-                              View post
+                              {t("moderation.viewPost")}
                             </ModerationButton>
                             <ModerationButton
                               variant="success"
@@ -183,7 +213,7 @@ const ModerationPage = () => {
                               loading={busyKey === `dismiss:${r.postId}`}
                               onClick={() => dismiss(r.postId)}
                             >
-                              Dismiss reports
+                              {t("moderation.dismiss")}
                             </ModerationButton>
                             {r.author && !r.author.isAdmin && !r.author.suspended && (
                               <ModerationButton
@@ -192,7 +222,7 @@ const ModerationPage = () => {
                                 loading={busyKey === `suspend:${r.author._id}`}
                                 onClick={() => handleSuspend(r)}
                               >
-                                Suspend author
+                                {t("moderation.suspendAuthor")}
                               </ModerationButton>
                             )}
                             <ModerationButton
@@ -201,7 +231,7 @@ const ModerationPage = () => {
                               loading={busyKey === `remove:${r.postId}`}
                               onClick={() => handleRemove(r)}
                             >
-                              Remove post
+                              {t("moderation.removePost")}
                             </ModerationButton>
                           </div>
                         </CardContent>
@@ -211,7 +241,7 @@ const ModerationPage = () => {
                 </div>
               )
             ) : suspended.length === 0 ? (
-              <p className="text-sm text-gray-500">No suspended users.</p>
+              <p className="text-sm text-gray-500">{t("moderation.noSuspended")}</p>
             ) : (
               <div className="space-y-3">
                 {suspended.map((u) => (
@@ -226,8 +256,10 @@ const ModerationPage = () => {
                         </Link>
                         {u.username && <span className="text-gray-500"> @{u.username}</span>}
                         <p className="text-xs text-gray-500 mt-0.5">
-                          Suspended {timeAgo(u.suspendedAt)} · {u.removedPostCount} post
-                          {u.removedPostCount === 1 ? "" : "s"} removed
+                          {t("moderation.suspendedLine", {
+                            time: relativeTime(u.suspendedAt),
+                            removed: removedText(u.removedPostCount),
+                          })}
                         </p>
                         {u.suspensionReason && (
                           <p className="text-xs text-gray-600 italic mt-0.5">
@@ -241,7 +273,7 @@ const ModerationPage = () => {
                         loading={busyKey === `unsuspend:${u._id}`}
                         onClick={() => unsuspend(u._id)}
                       >
-                        Lift suspension
+                        {t("moderation.lift")}
                       </ModerationButton>
                     </CardContent>
                   </Card>

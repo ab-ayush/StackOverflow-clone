@@ -11,6 +11,8 @@ import {
 } from "@/src/components/ui/card";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import { useAuth } from "@/src/lib/AuthContext";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { formatWithElements } from "@/src/i18n/format";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { toast } from "react-toastify";
@@ -18,6 +20,7 @@ import { toast } from "react-toastify";
 export default function SignUpPage() {
   const router = useRouter();
   const { Signup, loading } = useAuth();
+  const { t } = useLanguage();
   const [form, setform] = useState({ name: "", email: "", password: "" });
   const handleChange = (e: any) => {
     setform({ ...form, [e.target.id]: e.target.value });
@@ -25,12 +28,13 @@ export default function SignUpPage() {
   const handlesubmit = async (e: any) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.password) {
-      toast.error("ALL Fields are required");
+      toast.error(t("auth.allFieldsRequired"));
       return;
     }
     try {
-      await Signup(form);
-      router.push("/");
+      // only go to the home page when the account was really created
+      const created = await Signup(form);
+      if (created) router.push("/");
     } catch (error) {
       console.log(error);
     }
@@ -54,11 +58,9 @@ export default function SignUpPage() {
           <Card>
             <CardHeader className="space-y-1 text-center">
               <CardTitle className="text-xl lg:text-2xl">
-                Create your account
+                {t("auth.signup.title")}
               </CardTitle>
-              <CardDescription>
-                Join the Stack Overflow community
-              </CardDescription>
+              <CardDescription>{t("auth.signup.subtitle")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
@@ -83,7 +85,7 @@ export default function SignUpPage() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Sign up with Google
+                {t("auth.signup.google")}
               </Button>
 
               <Button
@@ -101,7 +103,7 @@ export default function SignUpPage() {
                     clipRule="evenodd"
                   />
                 </svg>
-                Sign up with GitHub
+                {t("auth.signup.github")}
               </Button>
 
               <div className="relative">
@@ -110,25 +112,25 @@ export default function SignUpPage() {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-white px-2 text-muted-foreground">
-                    Or continue with
+                    {t("auth.orContinueWith")}
                   </span>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm">
-                  Display name
+                  {t("auth.displayName")}
                 </Label>
                 <Input
                   id="name"
-                  placeholder="Enter your display name"
+                  placeholder={t("auth.displayNamePlaceholder")}
                   value={form.name}
                   onChange={handleChange}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm">
-                  Email
+                  {t("auth.email")}
                 </Label>
                 <Input
                   id="email"
@@ -140,7 +142,7 @@ export default function SignUpPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm">
-                  Password
+                  {t("auth.password")}
                 </Label>
                 <Input
                   id="password"
@@ -148,23 +150,24 @@ export default function SignUpPage() {
                   value={form.password}
                   onChange={handleChange}
                 />
-                <p className="text-xs text-gray-600">
-                  Passwords must contain at least eight characters, including at
-                  least 1 letter and 1 number.
-                </p>
+                <p className="text-xs text-gray-600">{t("auth.passwordHint")}</p>
               </div>
 
               <div className="flex items-start space-x-2">
                 <Checkbox id="terms" className="mt-1" />
                 <Label htmlFor="terms" className="text-sm leading-relaxed">
-                  I agree to the{" "}
-                  <Link href="#" className="text-blue-600 hover:underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="#" className="text-blue-600 hover:underline">
-                    Privacy Policy
-                  </Link>
+                  {formatWithElements(t("auth.agreeTerms"), {
+                    terms: (
+                      <Link href="#" className="text-blue-600 hover:underline">
+                        {t("auth.terms")}
+                      </Link>
+                    ),
+                    privacy: (
+                      <Link href="#" className="text-blue-600 hover:underline">
+                        {t("auth.privacy")}
+                      </Link>
+                    ),
+                  })}
                 </Label>
               </div>
 
@@ -172,13 +175,13 @@ export default function SignUpPage() {
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
               >
-                {loading ? "Signing up.." : "Sign up"}
+                {loading ? t("auth.signup.submitting") : t("auth.signup.submit")}
               </Button>
 
               <div className="text-center text-sm">
-                Already have an account?{" "}
-                <Link href="/login" className="text-blue-600 hover:underline">
-                  Log in
+                {t("auth.haveAccount")}{" "}
+                <Link href="/auth" className="text-blue-600 hover:underline">
+                  {t("auth.loginLink")}
                 </Link>
               </div>
             </CardContent>

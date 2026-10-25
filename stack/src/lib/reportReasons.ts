@@ -1,12 +1,20 @@
-export const REPORT_REASONS = [
-  { value: "spam", label: "Spam or advertising" },
-  { value: "harassment", label: "Harassment or hate" },
-  { value: "inappropriate", label: "Inappropriate or offensive content" },
-  { value: "misinformation", label: "Misleading or false information" },
-  { value: "other", label: "Something else" },
-] as const;
+import type { TranslationKey } from "@/src/i18n/translate";
 
-export type ReportReason = (typeof REPORT_REASONS)[number]["value"];
+export type ReportReason =
+  | "spam"
+  | "harassment"
+  | "inappropriate"
+  | "misinformation"
+  | "other";
 
-export const reasonLabel = (value: string) =>
-  REPORT_REASONS.find((r) => r.value === value)?.label ?? value;
+export const REPORT_REASONS: { value: ReportReason; labelKey: TranslationKey }[] = [
+  { value: "spam", labelKey: "report.reason.spam" },
+  { value: "harassment", labelKey: "report.reason.harassment" },
+  { value: "inappropriate", labelKey: "report.reason.inappropriate" },
+  { value: "misinformation", labelKey: "report.reason.misinformation" },
+  { value: "other", labelKey: "report.reason.other" },
+];
+
+// the translation key for a reason, or undefined for a reason this list doesn't know
+export const reasonLabelKey = (value: string): TranslationKey | undefined =>
+  REPORT_REASONS.find((r) => r.value === value)?.labelKey;

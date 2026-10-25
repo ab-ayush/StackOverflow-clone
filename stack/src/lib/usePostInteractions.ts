@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { toast } from "react-toastify";
 import axiosInstance from "./axiosinstance";
 import { useAuth } from "./AuthContext";
+import { tr, apiErrorMessage } from "@/src/i18n/runtime";
 import type { Post } from "./useFeed";
 
 type SetPosts = Dispatch<SetStateAction<Post[]>>;
@@ -34,7 +35,7 @@ export function usePostInteractions(
 
   const requireLogin = useCallback(() => {
     if (!user) {
-      toast.info("Please login to continue");
+      toast.info(tr("common.loginRequired"));
       router.push("/auth");
       return false;
     }
@@ -54,7 +55,7 @@ export function usePostInteractions(
         patchPost(id, { likedByMe: res.data.liked, likeCount: res.data.likeCount });
       } catch (error) {
         setPosts((prev) => prev.map((p) => (p._id === id ? flipLike(p) : p))); // undo
-        toast.error("Could not update like");
+        toast.error(apiErrorMessage(error, "post.likeFailed"));
       } finally {
         pending.current.delete(key);
       }
@@ -77,10 +78,12 @@ export function usePostInteractions(
         } else {
           patchPost(id, { bookmarkedByMe: res.data.bookmarked });
         }
-        toast.success(res.data.bookmarked ? "Saved to bookmarks" : "Removed from bookmarks");
+        toast.success(
+          res.data.bookmarked ? tr("post.bookmarkSaved") : tr("post.bookmarkRemoved")
+        );
       } catch (error) {
         setPosts((prev) => prev.map((p) => (p._id === id ? flipBookmark(p) : p))); // undo
-        toast.error("Could not update bookmark");
+        toast.error(apiErrorMessage(error, "post.bookmarkFailed"));
       } finally {
         pending.current.delete(key);
       }
@@ -93,9 +96,9 @@ export function usePostInteractions(
       const link = `${window.location.origin}/feed/${id}`;
       try {
         await navigator.clipboard.writeText(link);
-        toast.success("Link copied to clipboard");
+        toast.success(tr("post.linkCopied"));
       } catch {
-        window.prompt("Copy this link", link);
+        window.prompt(tr("post.copyPrompt"), link);
       }
 
       if (!user) return; // anyone can copy the link, only logged-in shares are counted
@@ -144,10 +147,10 @@ export function usePostInteractions(
             p.author?._id === authorId ? { ...p, followingAuthor: res.data.following } : p
           )
         );
-        toast.success(res.data.following ? "You're now following this user" : "Unfollowed");
+        toast.success(res.data.following ? tr("post.followed") : tr("post.unfollowed"));
       } catch (error: any) {
         flipAll(); // undo
-        toast.error(error.response?.data?.message || "Could not update follow");
+        toast.error(apiErrorMessage(error, "post.followFailed"));
       } finally {
         pending.current.delete(key);
       }

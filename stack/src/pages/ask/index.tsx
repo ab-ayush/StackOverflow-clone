@@ -7,6 +7,8 @@ import { Textarea } from "@/src/components/ui/textarea";
 import Mainlayout from "@/src/layout/Mainlayout";
 import { useAuth } from "@/src/lib/AuthContext";
 import axiosInstance from "@/src/lib/axiosinstance";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { apiErrorMessage } from "@/src/i18n/runtime";
 import { Plus, X } from "lucide-react";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
@@ -15,6 +17,7 @@ import { toast } from "react-toastify";
 const index = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     title: "",
     body: "",
@@ -38,7 +41,7 @@ const index = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      toast.error("PLlease login to ask question");
+      toast.error(t("ask.loginRequired"));
       router.push("/auth");
       return;
     }
@@ -53,12 +56,12 @@ const index = () => {
         },
       });
       if (res.data.data) {
-        toast.success("Question posted successfully");
+        toast.success(t("ask.posted"));
         router.push("/");
       }
     } catch (error) {
       console.log(error);
-      toast.error("Something went wrong");
+      toast.error(apiErrorMessage(error));
     }
   };
   const handleAddTag = (e: any) => {
@@ -79,63 +82,61 @@ const index = () => {
     <Mainlayout>
       <div className="max-w-6xl mx-auto">
         <h1 className="text-xl lg:text-2xl font-semibold mb-6">
-          Ask a public question
+          {t("ask.heading")}
         </h1>
 
         <form onSubmit={handleSubmit}>
           <Card>
             <CardHeader>
               <CardTitle className="text-lg lg:text-xl">
-                Writing a good question
+                {t("ask.cardTitle")}
               </CardTitle>
             </CardHeader>
 
             <CardContent className="space-y-6">
               <div>
                 <Label htmlFor="title" className="text-base font-semibold">
-                  Title
+                  {t("ask.titleLabel")}
                 </Label>
                 <p className="text-sm text-gray-600 mb-2">
-                  Be specific and imagine you're asking a question to another
-                  person.
+                  {t("ask.titleHint")}
                 </p>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={handleChange}
-                  placeholder="e.g. How to center a div in CSS?"
+                  placeholder={t("ask.titlePlaceholder")}
                   className="w-full"
                 />
               </div>
 
               <div>
                 <Label htmlFor="body" className="text-base font-semibold">
-                  What are the details of your problem?
+                  {t("ask.bodyLabel")}
                 </Label>
                 <p className="text-sm text-gray-600 mb-2">
-                  Introduce the problem and expand on what you put in the title.
-                  Minimum 20 characters.
+                  {t("ask.bodyHint")}
                 </p>
                 <Textarea
                   id="body"
                   value={formData.body}
                   onChange={handleChange}
-                  placeholder="Describe your problem in detail..."
+                  placeholder={t("ask.bodyPlaceholder")}
                   className="min-h-32 lg:min-h-48 w-full"
                 />
               </div>
               <div>
                 <Label htmlFor="tags" className="text-base font-semibold">
-                  Tags
+                  {t("ask.tagsLabel")}
                 </Label>
                 <p className="text-sm text-gray-600 mb-2">
-                  Add up to 5 tags to describe what your question is about.
+                  {t("ask.tagsHint")}
                 </p>
                 <div className="flex gap-2">
                   <Input
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="e.g. javascript react nextjs"
+                    placeholder={t("ask.tagsPlaceholder")}
                     className="w-full"
                   />
                   <Button
@@ -159,6 +160,7 @@ const index = () => {
                       >
                         {tag}
                         <button
+                          type="button"
                           onClick={() => handleRemoveTag(tag)}
                           className="ml-1 hover:text-red-600"
                         >
@@ -172,7 +174,7 @@ const index = () => {
 
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <Button type="submit" className="bg-blue-600 text-white">
-                  Review your question
+                  {t("ask.review")}
                 </Button>
               </div>
             </CardContent>

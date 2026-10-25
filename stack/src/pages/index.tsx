@@ -2,75 +2,24 @@ import { Avatar, AvatarFallback } from "@/src/components/ui/avatar";
 import { Badge } from "@/src/components/ui/badge";
 import Mainlayout from "@/src/layout/Mainlayout";
 import axiosInstance from "@/src/lib/axiosinstance";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { useFormatters } from "@/src/i18n/useFormatters";
+import type { TranslationKey } from "@/src/i18n/translate";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-const questions = [
-  {
-    id: 1,
-    votes: 0,
-    answers: 0,
-    views: 3,
-    title:
-      "Mouse Cursor in 16-bit Assembly (NASM) Overwrites Screen Content in VGA Mode 0x12",
-    content:
-      "I'm developing a PS/2 mouse driver in 16-bit assembly (NASM) for a custom operating system running in VGA mode 0x12 (640x480, 16 colors). The driver initializes the mouse, handles mouse events, and ...",
-    tags: ["assembly", "operating-system", "driver", "osdev"],
-    author: "PR0X",
-    authorId: 1,
-    authorRep: 3,
-    timeAgo: "2 mins ago",
-  },
-  {
-    id: 2,
-    votes: 0,
-    answers: 1,
-    views: 12,
-    title:
-      "Template specialization inside a template class using class template parameters",
-    content:
-      "template<typename TypA, typename TypX> struct MyClass { using TypAlias = TypA<TypX>; // error: 'TypA' is not a template [-Wtemplate-body] }; MyClass is very often specialized like ...",
-    tags: ["c++", "templates"],
-    author: "Felix.leg",
-    authorId: 2,
-    authorRep: 799,
-    timeAgo: "11 mins ago",
-  },
-  {
-    id: 3,
-    votes: -2,
-    answers: 0,
-    views: 13,
-    title: "How can i block user with middleware?",
-    content:
-      "The problem I am trying to create a complete user login form in NextJS and I want to block the user to go to other pages without a login process before. So online i found that one of the most complete ...",
-    tags: ["node.js", "forms", "authentication", "next.js", "middleware"],
-    author: "Aledi5",
-    authorId: 3,
-    authorRep: 31,
-    timeAgo: "20 mins ago",
-  },
-  {
-    id: 4,
-    votes: 0,
-    answers: 0,
-    views: 6,
-    title:
-      "call:fail action: private-web3-wallet-v2-o pen-wallet-connect, error: Pairing error: Subscribe error: Timed out waiting for 60000 ms /what it means",
-    content:
-      "Can't connect my web3 wallet with a dApp. A message pops: Accounts must be CAIP-10 compliant The error message reads: call:fail action: private-web3-wallet-v2-o pen-wallet-connect, error: Pairing ...",
-    tags: ["web3", "wallet", "blockchain"],
-    author: "CryptoUser",
-    authorId: 4,
-    authorRep: 1,
-    timeAgo: "25 mins ago",
-  },
-];
 export default function Home() {
   const [question, setquestion] = useState<any>(null);
   const [loading, setloading] = useState(true);
   const router = useRouter();
+  const { t } = useLanguage();
+  const { date, number, plural } = useFormatters();
+
+  // picks the singular or plural wording for a count, following the language's own rules
+  const countLabel = (count: number, one: TranslationKey, other: TranslationKey) =>
+    t(plural(count) === "one" ? one : other);
+
   useEffect(() => {
     const fetchquestion = async () => {
       try {
@@ -94,7 +43,9 @@ export default function Home() {
   if (!question || question.length === 0) {
     return (
       <Mainlayout>
-        <div className="text-center text-gray-500 mt-4">No question found.</div>
+        <div className="text-center text-gray-500 mt-4">
+          {t("home.noQuestions")}
+        </div>
       </Mainlayout>
     );
   }
@@ -103,38 +54,47 @@ export default function Home() {
     <Mainlayout>
       <main className="min-w-0 p-4 lg:p-6 ">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h1 className="text-xl lg:text-2xl font-semibold">Top Questions</h1>
+          <h1 className="text-xl lg:text-2xl font-semibold">
+            {t("home.topQuestions")}
+          </h1>
           <button
             onClick={() => router.push("/ask")}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium whitespace-nowrap"
           >
-            Ask Question
+            {t("home.askQuestion")}
           </button>
         </div>
         <div className="w-full">
           <div className="flex flex-col sm:flex-row items-start sm:items-center mb-4 text-sm gap-2 sm:gap-4">
-            <span className="text-gray-600">{question.length} questions</span>
+            <span className="text-gray-600">
+              {t(
+                plural(question.length) === "one"
+                  ? "home.questionCount.one"
+                  : "home.questionCount.other",
+                { count: number(question.length) }
+              )}
+            </span>
             <div className="flex flex-wrap gap-1 sm:gap-2">
               <button className="px-2 sm:px-3 py-1 bg-gray-200 text-gray-700 rounded text-xs sm:text-sm">
-                Newest
+                {t("home.filter.newest")}
               </button>
               <button className="px-2 sm:px-3 py-1 text-gray-600 hover:bg-gray-100 rounded text-xs sm:text-sm">
-                Active
+                {t("home.filter.active")}
               </button>
               <button className="px-2 sm:px-3 py-1 text-gray-600 hover:bg-gray-100 rounded flex items-center text-xs sm:text-sm">
-                Bountied
+                {t("home.filter.bountied")}
                 <Badge variant="secondary" className="ml-1 text-xs">
                   25
                 </Badge>
               </button>
               <button className="px-2 sm:px-3 py-1 text-gray-600 hover:bg-gray-100 rounded text-xs sm:text-sm">
-                Unanswered
+                {t("home.filter.unanswered")}
               </button>
               <button className="px-2 sm:px-3 py-1 text-gray-600 hover:bg-gray-100 rounded text-xs sm:text-sm">
-                More ▼
+                {t("home.filter.more")} ▼
               </button>
               <button className="px-2 sm:px-3 py-1 border border-gray-300 text-gray-600 hover:bg-gray-50 rounded ml-auto text-xs sm:text-sm">
-                🔍 Filter
+                🔍 {t("home.filter.filter")}
               </button>
             </div>
           </div>
@@ -145,9 +105,15 @@ export default function Home() {
                   <div className="flex sm:flex-col items-center sm:items-center text-sm text-gray-600 sm:w-16 lg:w-20 gap-4 sm:gap-2">
                     <div className="text-center">
                       <div className="font-medium">
-                        {question.upvote.length}
+                        {number(question.upvote.length)}
                       </div>
-                      <div className="text-xs">votes</div>
+                      <div className="text-xs">
+                        {countLabel(
+                          question.upvote.length,
+                          "home.votes.one",
+                          "home.votes.other"
+                        )}
+                      </div>
                     </div>
                     <div className="text-center">
                       <div
@@ -157,12 +123,14 @@ export default function Home() {
                             : ""
                         }`}
                       >
-                        {question.noofanswer}
+                        {number(question.noofanswer)}
                       </div>
                       <div className="text-xs">
-                        {question.noofanswer === 1
-                          ? "answer"
-                          : "answers"}
+                        {countLabel(
+                          question.noofanswer,
+                          "home.answers.one",
+                          "home.answers.other"
+                        )}
                       </div>
                     </div>
                   </div>
@@ -206,7 +174,9 @@ export default function Home() {
                           </span>
                         </Link>
 
-                        <span>asked {new Date(question.askedon).toLocaleDateString()}</span>
+                        <span>
+                          {t("home.askedOn", { date: date(question.askedon) })}
+                        </span>
                       </div>
                     </div>
                   </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "./axiosinstance";
 import { toast } from "react-toastify";
+import { tr, apiErrorMessage } from "@/src/i18n/runtime";
 
 export interface PostComment {
   _id: string;
@@ -36,7 +37,7 @@ export function useComments(postId: string, onCountChange: (delta: number) => vo
         setNextCursor(res.data.nextCursor);
       } catch (error) {
         console.log(error);
-        toast.error("Could not load comments");
+        toast.error(tr("comments.loadFailed"));
       } finally {
         setLoading(false);
       }
@@ -55,7 +56,7 @@ export function useComments(postId: string, onCountChange: (delta: number) => vo
       setNextCursor(res.data.nextCursor);
     } catch (error) {
       console.log(error);
-      toast.error("Could not load more comments");
+      toast.error(tr("comments.loadMoreFailed"));
     } finally {
       setLoadingMore(false);
     }
@@ -106,7 +107,7 @@ export function useComments(postId: string, onCountChange: (delta: number) => vo
             loading: false,
           },
         }));
-        toast.error("Could not load replies");
+        toast.error(tr("comments.repliesFailed"));
       }
     },
     [replies]
@@ -144,7 +145,7 @@ export function useComments(postId: string, onCountChange: (delta: number) => vo
         }
         return true;
       } catch (error: any) {
-        toast.error(error.response?.data?.message || "Failed to post comment");
+        toast.error(apiErrorMessage(error, "comments.postFailed"));
         return false;
       }
     },
@@ -172,10 +173,10 @@ export function useComments(postId: string, onCountChange: (delta: number) => vo
       } else {
         setComments((prev) => prev.map((c) => (c._id === updated._id ? updated : c)));
       }
-      toast.success("Comment updated");
+      toast.success(tr("comments.updated"));
       return true;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to update comment");
+      toast.error(apiErrorMessage(error, "comments.updateFailed"));
       return false;
     }
   }, []);
@@ -213,9 +214,9 @@ export function useComments(postId: string, onCountChange: (delta: number) => vo
             return rest;
           });
         }
-        toast.success("Comment deleted");
+        toast.success(tr("comments.deleted"));
       } catch (error: any) {
-        toast.error(error.response?.data?.message || "Failed to delete comment");
+        toast.error(apiErrorMessage(error, "comments.deleteFailed"));
       }
     },
     [onCountChange]

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import axiosInstance from "@/src/lib/axiosinstance";
+import { useLanguage } from "@/src/i18n/LanguageContext";
 
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -21,14 +23,14 @@ export default function QuestionsPage() {
   }, []);
 
   if (loading) {
-    return <div className="p-6">Loading questions...</div>;
+    return <div className="p-6">{t("questions.loading")}</div>;
   }
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">All Questions</h1>
+      <h1 className="text-2xl font-bold mb-4">{t("questions.allQuestions")}</h1>
       {questions.length === 0 ? (
-        <p>No questions found.</p>
+        <p>{t("home.noQuestions")}</p>
       ) : (
         questions.map((question: any) => (
           <div key={question._id} className="border-b py-4">

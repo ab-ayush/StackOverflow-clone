@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "./axiosinstance";
 import { toast } from "react-toastify";
+import { tr, apiErrorMessage } from "@/src/i18n/runtime";
 
 export interface Transfer {
   _id: string;
@@ -32,16 +33,16 @@ export function useReputationTransfer() {
     async (receiverId: string, amount: number, reason: string) => {
       setSending(true);
       try {
-        const res = await axiosInstance.post("/reputation-transfer/send", {
+        await axiosInstance.post("/reputation-transfer/send", {
           receiverId,
           amount,
           reason,
         });
-        toast.success(res.data.message || "Transfer successful");
+        toast.success(tr("transfer.success"));
         await fetchHistory();
         return true;
       } catch (error: any) {
-        toast.error(error.response?.data?.message || "Transfer failed");
+        toast.error(apiErrorMessage(error, "transfer.failed"));
         return false;
       } finally {
         setSending(false);

@@ -12,6 +12,12 @@ const userschema = mongoose.Schema({
   isAdmin: { type: Boolean, default: false },
   suspendedAt: { type: Date, default: null },
   suspensionReason: { type: String, default: "" },
+  preferredLanguage: {
+    type: String,
+    enum: ["en", "es", "hi", "pt", "zh", "fr"],
+    default: "en",
+  },
+  phone: { type: String, default: "" },
   reputation: { type: Number, default: 0 },
   profileCompletionBonusAwarded: { type: Boolean, default: false },
 });

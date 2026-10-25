@@ -5,9 +5,14 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useAuth } from "@/src/lib/AuthContext";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { useFormatters } from "@/src/i18n/useFormatters";
+import { formatWithElements } from "@/src/i18n/format";
 
 export default function ReputationTransfer() {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const { dateTime, number } = useFormatters();
   const { history, loading, sending, sendTransfer } = useReputationTransfer();
   const [receiverId, setReceiverId] = useState("");
   const [amount, setAmount] = useState("");
@@ -28,21 +33,21 @@ export default function ReputationTransfer() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Transfer Reputation</CardTitle>
+        <CardTitle>{t("transfer.title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <form onSubmit={handleSend} className="space-y-3">
           <div>
-            <Label htmlFor="receiverId">Recipient User ID</Label>
+            <Label htmlFor="receiverId">{t("transfer.recipientLabel")}</Label>
             <Input
               id="receiverId"
               value={receiverId}
               onChange={(e) => setReceiverId(e.target.value)}
-              placeholder="Paste the recipient's user ID"
+              placeholder={t("transfer.recipientPlaceholder")}
             />
           </div>
           <div>
-            <Label htmlFor="amount">Amount (max 50 per transaction)</Label>
+            <Label htmlFor="amount">{t("transfer.amountLabel")}</Label>
             <Input
               id="amount"
               type="number"
@@ -53,42 +58,41 @@ export default function ReputationTransfer() {
             />
           </div>
           <div>
-            <Label htmlFor="reason">Reason</Label>
+            <Label htmlFor="reason">{t("transfer.reasonLabel")}</Label>
             <Input
               id="reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Why are you sending this?"
+              placeholder={t("transfer.reasonPlaceholder")}
             />
           </div>
           <Button type="submit" disabled={sending} className="bg-blue-600 hover:bg-blue-700">
-            {sending ? "Sending..." : "Send"}
+            {sending ? t("transfer.sending") : t("transfer.send")}
           </Button>
-          {user && (
-            <p className="text-xs text-gray-500">
-              Requires more than 50 reputation to send. Daily limit: 100 points.
-            </p>
-          )}
+          {user && <p className="text-xs text-gray-500">{t("transfer.note")}</p>}
         </form>
 
         <div>
-          <h4 className="text-sm font-semibold mb-2">Transaction History</h4>
+          <h4 className="text-sm font-semibold mb-2">{t("transfer.history")}</h4>
           {loading ? (
-            <p className="text-sm text-gray-500">Loading...</p>
+            <p className="text-sm text-gray-500">{t("common.loading")}</p>
           ) : history.length === 0 ? (
-            <p className="text-sm text-gray-500">No transfers yet.</p>
+            <p className="text-sm text-gray-500">{t("transfer.none")}</p>
           ) : (
             <div className="space-y-2 max-h-72 overflow-y-auto">
-              {history.map((t) => {
-                const isSent = t.sender._id === user?._id;
+              {history.map((item) => {
+                const isSent = item.sender._id === user?._id;
                 return (
-                  <div key={t._id} className="text-sm border-b pb-2">
+                  <div key={item._id} className="text-sm border-b pb-2">
                     <div className="flex justify-between">
                       <span>
-                        {isSent ? "To " : "From "}
-                        <span className="font-medium">
-                          {isSent ? t.receiver.name : t.sender.name}
-                        </span>
+                        {formatWithElements(t(isSent ? "transfer.to" : "transfer.from"), {
+                          name: (
+                            <span className="font-medium">
+                              {isSent ? item.receiver.name : item.sender.name}
+                            </span>
+                          ),
+                        })}
                       </span>
                       <span
                         className={
@@ -96,13 +100,11 @@ export default function ReputationTransfer() {
                         }
                       >
                         {isSent ? "-" : "+"}
-                        {t.amount}
+                        {number(item.amount)}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500">{t.reason}</p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(t.createdAt).toLocaleString()}
-                    </p>
+                    <p className="text-xs text-gray-500">{item.reason}</p>
+                    <p className="text-xs text-gray-400">{dateTime(item.createdAt)}</p>
                   </div>
                 );
               })}

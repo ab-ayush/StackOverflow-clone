@@ -1,4 +1,5 @@
 import { Check, Loader2, UserMinus, UserPlus } from "lucide-react";
+import { useLanguage } from "@/src/i18n/LanguageContext";
 
 interface FollowButtonProps {
   following: boolean;
@@ -13,6 +14,7 @@ export default function FollowButton({
   loading = false,
   size = "sm",
 }: FollowButtonProps) {
+  const { t } = useLanguage();
   const sizing =
     size === "sm"
       ? "h-7 min-w-[88px] px-3 text-xs"
@@ -24,7 +26,7 @@ export default function FollowButton({
       type="button"
       onClick={onClick}
       disabled={loading}
-      aria-label={following ? "Unfollow" : "Follow"}
+      aria-label={following ? t("follow.unfollow") : t("follow.follow")}
       className={`group inline-flex items-center justify-center rounded-full font-medium transition-all duration-200 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed ${sizing} ${
         following
           ? "border border-gray-300 bg-white text-gray-700 hover:border-red-300 hover:bg-red-50 hover:text-red-600"
@@ -37,17 +39,17 @@ export default function FollowButton({
         <>
           <span className="inline-flex items-center gap-1 group-hover:hidden">
             <Check className={icon} />
-            Following
+            {t("follow.following")}
           </span>
           <span className="hidden items-center gap-1 group-hover:inline-flex">
             <UserMinus className={icon} />
-            Unfollow
+            {t("follow.unfollow")}
           </span>
         </>
       ) : (
         <span className="inline-flex items-center gap-1">
           <UserPlus className={icon} />
-          Follow
+          {t("follow.follow")}
         </span>
       )}
     </button>

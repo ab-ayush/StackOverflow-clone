@@ -9,11 +9,13 @@ import {
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { useAuth } from "@/src/lib/AuthContext";
+import { useLanguage } from "@/src/i18n/LanguageContext";
 import Link from "next/link";
 import React, { useState } from "react";
 
 const ForgotPasswordPage = () => {
   const { ForgotPassword, loading } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
@@ -38,16 +40,14 @@ const ForgotPasswordPage = () => {
           <Card>
             <CardHeader className="space-y-1 text-center">
               <CardTitle className="text-xl lg:text-2xl">
-                Reset your password
+                {t("auth.reset.title")}
               </CardTitle>
-              <CardDescription>
-                Enter your registered email and we'll send you a new password
-              </CardDescription>
+              <CardDescription>{t("auth.reset.subtitle")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm">
-                  Email
+                  {t("auth.email")}
                 </Label>
                 <Input
                   id="email"
@@ -61,16 +61,16 @@ const ForgotPasswordPage = () => {
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
               >
-                {loading ? "Sending..." : "Send new password"}
+                {loading ? t("auth.reset.sending") : t("auth.reset.submit")}
               </Button>
               {submitted && (
                 <p className="text-center text-sm text-muted-foreground">
-                  If that email exists, a new password has been sent.
+                  {t("auth.reset.sent")}
                 </p>
               )}
               <div className="text-center text-sm">
                 <Link href="/auth" className="text-blue-600 hover:underline">
-                  Back to log in
+                  {t("auth.backToLogin")}
                 </Link>
               </div>
             </CardContent>
@@ -79,6 +79,6 @@ const ForgotPasswordPage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default ForgotPasswordPage;

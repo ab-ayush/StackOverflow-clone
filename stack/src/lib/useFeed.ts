@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "./axiosinstance";
 import { toast } from "react-toastify";
 import { usePostInteractions } from "./usePostInteractions";
+import { tr, apiErrorMessage } from "@/src/i18n/runtime";
 
 export type PostType = "update" | "snippet" | "showcase" | "achievement";
 
@@ -87,7 +88,7 @@ export function useFeed(options: UseFeedOptions = {}) {
         setNextCursor(page.nextCursor);
       } catch (error) {
         console.log(error);
-        toast.error("Could not load posts");
+        toast.error(tr("post.loadFailed"));
       } finally {
         setLoading(false);
       }
@@ -119,10 +120,10 @@ export function useFeed(options: UseFeedOptions = {}) {
     try {
       const res = await axiosInstance.post("/post/create", toFormData(input));
       setPosts((prev) => [res.data.data, ...prev]);
-      toast.success("Post published");
+      toast.success(tr("post.published"));
       return true;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to publish post");
+      toast.error(apiErrorMessage(error, "post.publishFailed"));
       return false;
     }
   }, []);
@@ -131,10 +132,10 @@ export function useFeed(options: UseFeedOptions = {}) {
     try {
       const res = await axiosInstance.patch(`/post/update/${id}`, toFormData(input));
       setPosts((prev) => prev.map((p) => (p._id === id ? res.data.data : p)));
-      toast.success("Post updated");
+      toast.success(tr("post.updated"));
       return true;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to update post");
+      toast.error(apiErrorMessage(error, "post.updateFailed"));
       return false;
     }
   }, []);
@@ -143,9 +144,9 @@ export function useFeed(options: UseFeedOptions = {}) {
     try {
       await axiosInstance.delete(`/post/delete/${id}`);
       setPosts((prev) => prev.filter((p) => p._id !== id));
-      toast.success("Post deleted");
+      toast.success(tr("post.deleted"));
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to delete post");
+      toast.error(apiErrorMessage(error, "post.deleteFailed"));
     }
   }, []);
 

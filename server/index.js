@@ -18,6 +18,7 @@ import followRoutes from "./routes/follow.js";
 import notificationRoutes from "./routes/notification.js";
 import moderationRoutes from "./routes/moderation.js";
 import compression from "compression";
+import languageRoutes from "./routes/language.js";
 
 const app = express();
 app.use(compression());
@@ -54,6 +55,7 @@ app.use('/comment', commentRoutes)
 app.use('/follow', followRoutes)
 app.use('/notification', notificationRoutes)
 app.use('/moderation', moderationRoutes)
+app.use('/language', languageRoutes)
 const PORT = process.env.PORT || 5000;
 const databaseurl = process.env.MONGODB_URL;
 

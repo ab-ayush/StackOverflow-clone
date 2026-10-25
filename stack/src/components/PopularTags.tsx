@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Hash } from "lucide-react";
 import axiosInstance from "@/src/lib/axiosinstance";
+import { useLanguage } from "@/src/i18n/LanguageContext";
 
 interface PopularTag {
   tag: string;
@@ -11,6 +12,7 @@ interface PopularTag {
 
 export default function PopularTags() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [tags, setTags] = useState<PopularTag[]>([]);
   const [query, setQuery] = useState("");
 
@@ -43,7 +45,7 @@ export default function PopularTags() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Find a hashtag"
+            placeholder={t("tags.findHashtag")}
             className="w-full border rounded-full pl-9 pr-3 py-1.5 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
           />
         </div>
@@ -51,13 +53,13 @@ export default function PopularTags() {
 
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {tags.map((t) => (
+          {tags.map((tag) => (
             <Link
-              key={t.tag}
-              href={`/feed/tag/${t.tag}`}
+              key={tag.tag}
+              href={`/feed/tag/${tag.tag}`}
               className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
             >
-              #{t.tag} <span className="text-blue-400">{t.count}</span>
+              #{tag.tag} <span className="text-blue-400">{tag.count}</span>
             </Link>
           ))}
         </div>

@@ -1,16 +1,14 @@
 import { useAuth } from "@/src/lib/AuthContext";
 import { useUnreadCount } from "@/src/lib/useUnreadCount";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import LanguageSwitcher from "./LanguageSwitcher";
 import { Bell, Menu, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-// const User = {
-//   _id: "1",
-//   name: "Alice Johnson",
-// };
-
 const Navbar = ({ handleslidein }: any) => {
   const { user, Logout } = useAuth();
+  const { t } = useLanguage();
   const [hasMounted, setHasMounted] = useState(false);
   useEffect(() => {
     setHasMounted(true);
@@ -23,7 +21,7 @@ const Navbar = ({ handleslidein }: any) => {
     <div className=" top-0 z-50 w-full min-h-[53px] bg-white border-t-[3px] border-[#ef8236] shadow-[0_1px_5px_#00000033] flex items-center justify-center">
       <div className="w-[90%] max-w-[1440px] flex items-center justify-between mx-auto py-1">
         <button
-          aria-label="Toggle sidebar"
+          aria-label={t("nav.toggleSidebar")}
           className="sm:block md:hidden p-2 rounded hover:bg-gray-100 transition"
           onClick={handleslidein}
         >
@@ -35,39 +33,42 @@ const Navbar = ({ handleslidein }: any) => {
           </Link>
 
           <div className="hidden sm:flex gap-1">
-            {["About", "Products", "For Teams"].map((item) => (
+            {(["nav.about", "nav.products", "nav.forTeams"] as const).map((key) => (
               <Link
-                key={item}
+                key={key}
                 href="/"
                 className="text-sm text-[#454545] font-medium px-4 py-2 rounded hover:bg-gray-200 transition"
               >
-                {item}
+                {t(key)}
               </Link>
             ))}
           </div>
           <form className="hidden lg:block flex-grow relative px-3">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={t("nav.searchPlaceholder")}
               className="w-full max-w-[600px] pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
             />
             <Search className="absolute left-4 top-2.5 h-4 w-4 text-gray-600" />
           </form>
         </div>
         <div className="flex items-center gap-2">
-           {!hasMounted ? null : !user ? (
+          <LanguageSwitcher />
+          {!hasMounted ? null : !user ? (
             <Link
               href="/auth"
               className="text-sm font-medium text-[#454545] bg-[#e7f8fe] hover:bg-[#d3e4eb] border border-blue-500 px-4 py-1.5 rounded transition"
             >
-              Log in
+              {t("nav.login")}
             </Link>
           ) : (
             <>
               <Link
                 href="/notifications"
                 aria-label={
-                  unread > 0 ? `${unread} unread notifications` : "Notifications"
+                  unread > 0
+                    ? t("nav.notificationsUnread", { count: unread })
+                    : t("nav.notifications")
                 }
                 className="relative p-2 rounded-full hover:bg-gray-100 transition"
               >
@@ -90,7 +91,7 @@ const Navbar = ({ handleslidein }: any) => {
                 onClick={handlelogout}
                 className="text-sm font-medium text-[#454545] bg-[#e7f8fe] hover:bg-[#d3e4eb] border border-blue-500 px-4 py-1.5 rounded transition"
               >
-                Log out
+                {t("nav.logout")}
               </button>
             </>
           )}

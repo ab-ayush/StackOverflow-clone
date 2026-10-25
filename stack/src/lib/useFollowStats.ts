@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { toast } from "react-toastify";
 import axiosInstance from "./axiosinstance";
 import { useAuth } from "./AuthContext";
+import { tr, apiErrorMessage } from "@/src/i18n/runtime";
 
 export interface FollowStatsData {
   followerCount: number;
@@ -34,7 +35,7 @@ export function useFollowStats(userId: string) {
 
   const toggle = useCallback(async () => {
     if (!user) {
-      toast.info("Please login to continue");
+      toast.info(tr("common.loginRequired"));
       router.push("/auth");
       return;
     }
@@ -48,7 +49,7 @@ export function useFollowStats(userId: string) {
           : prev
       );
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Could not update follow");
+      toast.error(apiErrorMessage(error, "post.followFailed"));
     } finally {
       setBusy(false);
     }

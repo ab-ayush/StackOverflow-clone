@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "./axiosinstance";
 import { toast } from "react-toastify";
+import { tr, apiErrorMessage } from "@/src/i18n/runtime";
 
 export interface SessionInfo {
   id: string;
@@ -24,32 +25,29 @@ export function useSessions() {
       const res = await axiosInstance.get("/session/mine");
       setSessions(res.data.data);
     } catch (error) {
-      toast.error("Could not load sessions");
+      toast.error(apiErrorMessage(error, "sessions.loadFailed"));
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const revoke = useCallback(
-    async (sessionId: string) => {
-      try {
-        await axiosInstance.delete(`/session/${sessionId}`);
-        toast.success("Session revoked");
-        setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-      } catch (error) {
-        toast.error("Failed to revoke session");
-      }
-    },
-    []
-  );
+  const revoke = useCallback(async (sessionId: string) => {
+    try {
+      await axiosInstance.delete(`/session/${sessionId}`);
+      toast.success(tr("sessions.revoked"));
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "sessions.revokeFailed"));
+    }
+  }, []);
 
   const revokeAllOthers = useCallback(async () => {
     try {
       await axiosInstance.delete("/session");
-      toast.success("Logged out of all other devices");
+      toast.success(tr("sessions.revokedAll"));
       setSessions((prev) => prev.filter((s) => s.isCurrent));
     } catch (error) {
-      toast.error("Failed to revoke sessions");
+      toast.error(apiErrorMessage(error, "sessions.revokeAllFailed"));
     }
   }, []);
 

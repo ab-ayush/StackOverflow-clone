@@ -16,9 +16,9 @@ import {
   USERNAME_REGEX,
 } from "../utils/username.js";
 
-// never send the password hash to the client
+// never send the password hash or the phone number to the client
 const withoutPassword = (doc) => {
-  const { password, ...safe } = doc.toObject();
+  const { password, phone, ...safe } = doc.toObject();
   return safe;
 };
 
@@ -234,7 +234,7 @@ async function createSessionAndTokens(exisitinguser, deviceId, deviceInfo) {
 
 export const getallusers = async (req, res) => {
   try {
-    const alluser = await user.find().select("-password");
+    const alluser = await user.find().select("-password -phone");
     res.status(200).json({ data: alluser });
   } catch (error) {
     res.status(500).json("something went wrong..");

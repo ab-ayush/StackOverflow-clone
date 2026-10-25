@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import axiosInstance from "./axiosinstance";
+import { tr, apiErrorMessage } from "@/src/i18n/runtime";
+import type { TranslationKey } from "@/src/i18n/translate";
 
 export interface ReportAuthor {
   _id: string;
@@ -54,7 +56,7 @@ export function useModeration(enabled: boolean) {
         setReports(queue.data.data);
       } catch (error) {
         console.log(error);
-        toast.error("Could not load the moderation queue");
+        toast.error(tr("moderation.loadFailed"));
       } finally {
         setLoading(false);
       }
@@ -62,12 +64,12 @@ export function useModeration(enabled: boolean) {
     load();
   }, [enabled, loadSuspended]);
 
-  const run = async (key: string, action: () => Promise<void>, failMessage: string) => {
+  const run = async (key: string, action: () => Promise<void>, failKey: TranslationKey) => {
     setBusyKey(key);
     try {
       await action();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || failMessage);
+      toast.error(apiErrorMessage(error, failKey));
     } finally {
       setBusyKey(null);
     }
@@ -79,9 +81,9 @@ export function useModeration(enabled: boolean) {
       async () => {
         await axiosInstance.patch(`/moderation/dismiss/${postId}`);
         setReports((prev) => prev.filter((r) => r.postId !== postId));
-        toast.success("Reports dismissed");
+        toast.success(tr("moderation.dismissed"));
       },
-      "Could not dismiss reports"
+      "moderation.dismissFailed"
     );
 
   const removePost = (postId: string, reason: string) =>
@@ -101,9 +103,9 @@ export function useModeration(enabled: boolean) {
                 : r
             )
         );
-        toast.success("Post removed");
+        toast.success(tr("moderation.removed"));
       },
-      "Could not remove the post"
+      "moderation.removeFailed"
     );
 
   const suspend = (userId: string, reason: string) =>
@@ -119,9 +121,9 @@ export function useModeration(enabled: boolean) {
           )
         );
         await loadSuspended();
-        toast.success("User suspended");
+        toast.success(tr("moderation.suspended"));
       },
-      "Could not suspend the user"
+      "moderation.suspendFailed"
     );
 
   const unsuspend = (userId: string) =>
@@ -137,9 +139,9 @@ export function useModeration(enabled: boolean) {
               : r
           )
         );
-        toast.success("Suspension lifted");
+        toast.success(tr("moderation.unsuspended"));
       },
-      "Could not lift the suspension"
+      "moderation.unsuspendFailed"
     );
 
   return { reports, suspended, loading, busyKey, dismiss, removePost, suspend, unsuspend };

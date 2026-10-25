@@ -1,3 +1,5 @@
+import { useLanguage } from "@/src/i18n/LanguageContext";
+
 function PostSkeleton() {
   return (
     <div className="rounded-xl border bg-white p-4 space-y-3 animate-pulse" aria-hidden>
@@ -24,8 +26,9 @@ function PostSkeleton() {
 }
 
 export default function FeedSkeleton({ count = 3 }: { count?: number }) {
+  const { t } = useLanguage();
   return (
-    <div className="space-y-4" role="status" aria-label="Loading posts">
+    <div className="space-y-4" role="status" aria-label={t("feed.loadingPosts")}>
       {Array.from({ length: count }).map((_, i) => (
         <PostSkeleton key={i} />
       ))}

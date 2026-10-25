@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import { useAuth } from "@/src/lib/AuthContext";
+import { useLanguage } from "@/src/i18n/LanguageContext";
 
 interface DeviceOtpVerifyProps {
   email: string;
@@ -13,6 +14,7 @@ export default function DeviceOtpVerify({
   onVerified,
 }: DeviceOtpVerifyProps) {
   const { VerifyDeviceOtp, loading } = useAuth();
+  const { t } = useLanguage();
   const [otp, setOtp] = useState<string>("");
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -21,7 +23,7 @@ export default function DeviceOtpVerify({
       await VerifyDeviceOtp({ email, otp, deviceId });
       onVerified?.();
     } catch (error) {
-      // error toast already handled inside VerifyDeviceOtp
+      // the error toast is already shown inside VerifyDeviceOtp
       console.log(error);
     }
   };
@@ -34,12 +36,8 @@ export default function DeviceOtpVerify({
           className="bg-white p-6 rounded-lg shadow space-y-4"
         >
           <div className="text-center space-y-1">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Verify this device
-            </h2>
-            <p className="text-sm text-gray-600">
-              We sent a 6-digit code to {email}. It expires in 10 minutes.
-            </p>
+            <h2 className="text-xl font-semibold text-gray-900">{t("otp.title")}</h2>
+            <p className="text-sm text-gray-600">{t("otp.body", { email })}</p>
           </div>
 
           <input
@@ -48,7 +46,7 @@ export default function DeviceOtpVerify({
             maxLength={6}
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-            placeholder="Enter code"
+            placeholder={t("otp.placeholder")}
             autoFocus
             required
             className="w-full border rounded-md px-3 py-2 text-center tracking-widest text-lg text-black font-semibold placeholder:text-gray-400"
@@ -59,7 +57,7 @@ export default function DeviceOtpVerify({
             disabled={loading || otp.length !== 6}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 text-sm disabled:opacity-50"
           >
-            {loading ? "Verifying..." : "Verify"}
+            {loading ? t("otp.verifying") : t("otp.verify")}
           </button>
         </form>
       </div>

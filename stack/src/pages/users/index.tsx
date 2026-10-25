@@ -2,38 +2,15 @@ import { Avatar, AvatarFallback } from "@/src/components/ui/avatar";
 import { Input } from "@/src/components/ui/input";
 import Mainlayout from "@/src/layout/Mainlayout";
 import axiosInstance from "@/src/lib/axiosinstance";
+import { useLanguage } from "@/src/i18n/LanguageContext";
 import { Calendar, Search } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-const users = [
-  {
-    id: 1,
-    name: "John Doe",
-    username: "johndoe",
-    joinDate: "2019-03-15",
-  },
-  {
-    id: 2,
-    name: "Felix Rodriguez",
-    username: "Felix.leg",
-    joinDate: "2020-07-22",
-  },
-  {
-    id: 3,
-    name: "Alex Smith",
-    username: "Aledi5",
-    joinDate: "2023-11-10",
-  },
-  {
-    id: 4,
-    name: "Sarah Johnson",
-    username: "PR0X",
-    joinDate: "2024-01-05",
-  },
-];
+
 const index = () => {
   const [users, setusers] = useState<any>(null);
   const [loading, setloading] = useState(true);
+  const { t } = useLanguage();
   useEffect(() => {
     const fetchuser = async () => {
       try {
@@ -56,18 +33,27 @@ const index = () => {
   }
   if (!users || users.length === 0) {
     return (
-      <div className="text-center text-gray-500 mt-4">No users found.</div>
+      <Mainlayout>
+        <div className="text-center text-gray-500 mt-4">
+          {t("users.noUsers")}
+        </div>
+      </Mainlayout>
     );
   }
   return (
     <Mainlayout>
       <div className="max-w-6xl">
-        <h1 className="text-xl lg:text-2xl font-semibold mb-6">Users</h1>
+        <h1 className="text-xl lg:text-2xl font-semibold mb-6">
+          {t("users.heading")}
+        </h1>
 
         <div className="mb-6">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input placeholder="Filter by user" className="pl-10" />
+            <Input
+              placeholder={t("users.filterPlaceholder")}
+              className="pl-10"
+            />
           </div>
         </div>
 
@@ -88,15 +74,21 @@ const index = () => {
                     <h3 className="font-semibold text-blue-600 hover:text-blue-800 truncate">
                       {user.name}
                     </h3>
-                    <p className="text-sm text-gray-600 truncate">
-                      @{user.name}
-                    </p>
+                    {user.username && (
+                      <p className="text-sm text-gray-600 truncate">
+                        @{user.username}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex items-center text-sm text-gray-600 mb-3">
                   <Calendar className="w-4 h-4 mr-1" />
-                  <span>Joined {new Date(user.joinDate).getFullYear()}</span>
+                  <span>
+                    {t("users.joined", {
+                      year: String(new Date(user.joinDate).getFullYear()),
+                    })}
+                  </span>
                 </div>
               </div>
             </Link>

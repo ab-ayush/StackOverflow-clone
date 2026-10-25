@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/src/i18n/LanguageContext";
 
 interface InfiniteScrollTriggerProps {
   hasMore: boolean;
@@ -14,6 +15,7 @@ export default function InfiniteScrollTrigger({
   failed,
   onLoadMore,
 }: InfiniteScrollTriggerProps) {
+  const { t } = useLanguage();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef(onLoadMore);
   loadMoreRef.current = onLoadMore;
@@ -49,7 +51,7 @@ export default function InfiniteScrollTrigger({
           onClick={onLoadMore}
           className="rounded-full border border-red-300 bg-white px-5 py-2 text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-50 active:scale-95"
         >
-          Couldn't load more. Try again
+          {t("feed.loadFailed")}
         </button>
       ) : null}
     </div>

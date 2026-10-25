@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Flame } from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
 import { useFeed } from "@/src/lib/useFeed";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { formatWithElements } from "@/src/i18n/format";
 import PostComposer from "./PostComposer";
 import PostCard from "./PostCard";
 import FeedSkeleton from "./FeedSkeleton";
@@ -23,6 +25,7 @@ export default function FeedList({
   emptyMessage,
 }: FeedListProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const {
     posts,
@@ -48,10 +51,10 @@ export default function FeedList({
   const isTrending = scope === "trending";
 
   const defaultEmpty = isTrending
-    ? "Nothing is trending yet. Like, comment on or share posts to get things moving!"
+    ? t("feed.empty.trending")
     : scope === "following"
-    ? "Nothing here yet. Follow people from the Explore tab to see their posts here."
-    : "No posts yet. Be the first to share something!";
+    ? t("feed.empty.following")
+    : t("feed.empty.explore");
 
   return (
     <div className="space-y-4">
@@ -63,10 +66,13 @@ export default function FeedList({
         ) : (
           <Card>
             <CardContent className="p-4 text-sm text-gray-600">
-              <Link href="/auth" className="text-blue-600 hover:underline">
-                Log in
-              </Link>{" "}
-              to share a post.
+              {formatWithElements(t("feed.loginToPost"), {
+                login: (
+                  <Link href="/auth" className="text-blue-600 hover:underline">
+                    {t("nav.login")}
+                  </Link>
+                ),
+              })}
             </CardContent>
           </Card>
         ))}
@@ -85,7 +91,8 @@ export default function FeedList({
             >
               {isTrending && (
                 <div className="flex items-center gap-1 px-1 text-xs font-medium text-orange-600">
-                  <Flame className="w-3.5 h-3.5" />#{index + 1} trending
+                  <Flame className="w-3.5 h-3.5" />
+                  {t("feed.trendingRank", { rank: index + 1 })}
                 </div>
               )}
               <PostCard
@@ -112,7 +119,7 @@ export default function FeedList({
       />
 
       {!isTrending && !hasMore && posts.length > 0 && (
-        <p className="text-center text-sm text-gray-400 pb-6">You're all caught up</p>
+        <p className="text-center text-sm text-gray-400 pb-6">{t("feed.caughtUp")}</p>
       )}
     </div>
   );

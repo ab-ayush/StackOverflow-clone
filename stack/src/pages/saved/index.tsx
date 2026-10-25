@@ -2,12 +2,15 @@ import Link from "next/link";
 import Mainlayout from "@/src/layout/Mainlayout";
 import { useAuth } from "@/src/lib/AuthContext";
 import { useFeed } from "@/src/lib/useFeed";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { formatWithElements } from "@/src/i18n/format";
 import PostCard from "@/src/components/PostCard";
 import FeedSkeleton from "@/src/components/FeedSkeleton";
 import InfiniteScrollTrigger from "@/src/components/InfiniteScrollTrigger";
 
 const SavedPage = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const {
     posts,
     loading,
@@ -27,17 +30,21 @@ const SavedPage = () => {
   return (
     <Mainlayout>
       <div className="max-w-2xl space-y-4">
-        <h1 className="text-xl lg:text-2xl font-semibold text-gray-900">Saved posts</h1>
+        <h1 className="text-xl lg:text-2xl font-semibold text-gray-900">
+          {t("saved.heading")}
+        </h1>
 
         {loading ? (
           <FeedSkeleton />
         ) : posts.length === 0 ? (
           <p className="text-sm text-gray-500">
-            You haven't saved any posts yet. Tap the bookmark icon on a post in the{" "}
-            <Link href="/feed" className="text-blue-600 hover:underline">
-              feed
-            </Link>{" "}
-            to keep it here.
+            {formatWithElements(t("saved.empty"), {
+              feed: (
+                <Link href="/feed" className="text-blue-600 hover:underline">
+                  {t("saved.feedLink")}
+                </Link>
+              ),
+            })}
           </p>
         ) : (
           <div className="space-y-4">

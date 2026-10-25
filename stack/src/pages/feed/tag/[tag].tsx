@@ -2,9 +2,11 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import Mainlayout from "@/src/layout/Mainlayout";
 import FeedList from "@/src/components/FeedList";
+import { useLanguage } from "@/src/i18n/LanguageContext";
 
 const TagPage = () => {
   const router = useRouter();
+  const { t } = useLanguage();
   const tag =
     typeof router.query.tag === "string" ? router.query.tag.toLowerCase() : null;
 
@@ -12,7 +14,7 @@ const TagPage = () => {
     <Mainlayout>
       <div className="max-w-2xl space-y-4">
         <Link href="/feed" className="text-sm text-blue-600 hover:underline">
-          ← Back to feed
+          ← {t("feed.backToFeed")}
         </Link>
         {tag && (
           <>
@@ -21,7 +23,7 @@ const TagPage = () => {
               key={tag}
               endpoint={`/post/tag/${tag}`}
               showComposer={false}
-              emptyMessage={`No posts with #${tag} yet.`}
+              emptyMessage={t("feed.noPostsWithTag", { tag })}
             />
           </>
         )}

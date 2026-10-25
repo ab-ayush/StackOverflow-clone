@@ -3,10 +3,12 @@ import Link from "next/link";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+import RichText from "./RichText";
 import { useAuth } from "@/src/lib/AuthContext";
 import { PostComment, ReplyState, useComments } from "@/src/lib/useComments";
-import { timeAgo } from "@/src/lib/timeAgo";
-import RichText from "./RichText";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { useFormatters } from "@/src/i18n/useFormatters";
+import { formatWithElements } from "@/src/i18n/format";
 
 const MAX_COMMENT = 1000;
 
@@ -27,6 +29,7 @@ function CommentForm({
   onCancel,
   autoFocus,
 }: CommentFormProps) {
+  const { t } = useLanguage();
   const [text, setText] = useState(initialValue);
   const [submitting, setSubmitting] = useState(false);
 
@@ -51,7 +54,7 @@ function CommentForm({
       <div className="flex justify-end gap-2">
         {onCancel && (
           <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         )}
         <Button
@@ -61,7 +64,7 @@ function CommentForm({
           disabled={submitting || !text.trim()}
           className="bg-blue-600 hover:bg-blue-700 text-white"
         >
-          {submitting ? "Saving..." : submitLabel}
+          {submitting ? t("composer.saving") : submitLabel}
         </Button>
       </div>
     </div>
@@ -90,15 +93,16 @@ function CommentItem({
   onDelete,
 }: CommentItemProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const { relativeTime, number, plural } = useFormatters();
   const [editing, setEditing] = useState(false);
   const [replying, setReplying] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
-  const authorName = comment.author?.name || "Unknown user";
+  const authorName = comment.author?.name || t("post.unknownUser");
   const replyCount = comment.replyCount ?? 0;
   const isCommentAuthor = !!user && user._id === comment.author?._id;
-  const canDelete =
-    isCommentAuthor || (!!user && !!postAuthorId && user._id === postAuthorId);
+  const canDelete = isCommentAuthor || (!!user && !!postAuthorId && user._id === postAuthorId);
 
   const toggleReplies = () => {
     if (!showReplies && !replyState?.loaded) onLoadReplies?.(comment._id);
@@ -117,8 +121,8 @@ function CommentItem({
   const handleDelete = () => {
     const message =
       !isReply && replyCount > 0
-        ? "Delete this comment and its replies?"
-        : "Delete this comment?";
+        ? t("comments.confirmDeleteWithReplies")
+        : t("comments.confirmDelete");
     if (window.confirm(message)) onDelete(comment);
   };
 
@@ -138,13 +142,11 @@ function CommentItem({
                 {authorName}
               </Link>
             ) : (
-              <span className="text-sm font-medium text-gray-700">
-                {authorName}
-              </span>
+              <span className="text-sm font-medium text-gray-700">{authorName}</span>
             )}
             <span className="text-xs text-gray-500">
-              {timeAgo(comment.createdAt)}
-              {comment.editedAt ? " · edited" : ""}
+              {relativeTime(comment.createdAt)}
+              {comment.editedAt ? ` · ${t("post.edited")}` : ""}
             </span>
           </div>
 
@@ -152,8 +154,8 @@ function CommentItem({
             <div className="pt-2">
               <CommentForm
                 initialValue={comment.content}
-                placeholder="Edit your comment"
-                submitLabel="Save"
+                placeholder={t("comments.editPlaceholder")}
+                submitLabel={t("composer.save")}
                 autoFocus
                 onSubmit={async (text) => {
                   const ok = await onEdit(comment, text);
@@ -173,24 +175,18 @@ function CommentItem({
         {!editing && (
           <div className="flex items-center gap-3 px-1 text-xs text-gray-500">
             {!isReply && user && (
-              <button
-                className="hover:text-blue-600"
-                onClick={() => setReplying((v) => !v)}
-              >
-                Reply
+              <button className="hover:text-blue-600" onClick={() => setReplying((v) => !v)}>
+                {t("comments.reply")}
               </button>
             )}
             {isCommentAuthor && (
-              <button
-                className="hover:text-blue-600"
-                onClick={() => setEditing(true)}
-              >
-                Edit
+              <button className="hover:text-blue-600" onClick={() => setEditing(true)}>
+                {t("common.edit")}
               </button>
             )}
             {canDelete && (
               <button className="hover:text-red-600" onClick={handleDelete}>
-                Delete
+                {t("common.delete")}
               </button>
             )}
           </div>
@@ -199,8 +195,8 @@ function CommentItem({
         {replying && (
           <div className="pt-1">
             <CommentForm
-              placeholder={`Reply to ${authorName}`}
-              submitLabel="Reply"
+              placeholder={t("comments.replyTo", { name: authorName })}
+              submitLabel={t("comments.reply")}
               autoFocus
               onSubmit={handleReply}
               onCancel={() => setReplying(false)}
@@ -209,13 +205,15 @@ function CommentItem({
         )}
 
         {!isReply && replyCount > 0 && (
-          <button
-            className="px-1 text-xs text-blue-600 hover:underline"
-            onClick={toggleReplies}
-          >
+          <button className="px-1 text-xs text-blue-600 hover:underline" onClick={toggleReplies}>
             {showReplies
-              ? "Hide replies"
-              : `View ${replyCount} ${replyCount === 1 ? "reply" : "replies"}`}
+              ? t("comments.hideReplies")
+              : t(
+                  plural(replyCount) === "one"
+                    ? "comments.viewReplies.one"
+                    : "comments.viewReplies.other",
+                  { count: number(replyCount) }
+                )}
           </button>
         )}
 
@@ -232,14 +230,14 @@ function CommentItem({
               />
             ))}
             {replyState?.loading && (
-              <p className="text-xs text-gray-500">Loading replies...</p>
+              <p className="text-xs text-gray-500">{t("comments.loadingReplies")}</p>
             )}
             {replyState?.nextCursor && !replyState.loading && (
               <button
                 className="px-1 text-xs text-blue-600 hover:underline"
                 onClick={() => onLoadReplies?.(comment._id)}
               >
-                View more replies
+                {t("comments.viewMoreReplies")}
               </button>
             )}
           </div>
@@ -261,6 +259,7 @@ export default function CommentSection({
   onCountChange,
 }: CommentSectionProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const {
     comments,
     loading,
@@ -278,23 +277,26 @@ export default function CommentSection({
     <div className="pt-3 border-t space-y-4">
       {user ? (
         <CommentForm
-          placeholder="Write a comment..."
-          submitLabel="Comment"
+          placeholder={t("comments.writePlaceholder")}
+          submitLabel={t("comments.submit")}
           onSubmit={(text) => addComment(text)}
         />
       ) : (
         <p className="text-sm text-gray-500">
-          <Link href="/auth" className="text-blue-600 hover:underline">
-            Log in
-          </Link>{" "}
-          to join the conversation.
+          {formatWithElements(t("comments.loginToJoin"), {
+            login: (
+              <Link href="/auth" className="text-blue-600 hover:underline">
+                {t("nav.login")}
+              </Link>
+            ),
+          })}
         </p>
       )}
 
       {loading ? (
         <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500 mx-auto" />
       ) : comments.length === 0 ? (
-        <p className="text-sm text-gray-500">No comments yet.</p>
+        <p className="text-sm text-gray-500">{t("comments.none")}</p>
       ) : (
         <div className="space-y-4">
           {comments.map((comment) => (
@@ -314,13 +316,8 @@ export default function CommentSection({
 
       {hasMore && (
         <div className="text-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={loadMore}
-            disabled={loadingMore}
-          >
-            {loadingMore ? "Loading..." : "Load more comments"}
+          <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore}>
+            {loadingMore ? t("common.loading") : t("comments.loadMore")}
           </Button>
         </div>
       )}

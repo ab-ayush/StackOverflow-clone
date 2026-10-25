@@ -1,5 +1,8 @@
 import FollowButton from "./FollowButton";
 import { useFollowStats } from "@/src/lib/useFollowStats";
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { useFormatters } from "@/src/i18n/useFormatters";
+import { formatWithElements } from "@/src/i18n/format";
 
 export default function FollowStats({
   userId,
@@ -8,17 +11,36 @@ export default function FollowStats({
   userId: string;
   isOwnProfile: boolean;
 }) {
+  const { t } = useLanguage();
+  const { number, plural } = useFormatters();
   const { stats, busy, toggle } = useFollowStats(userId);
   if (!stats) return null;
+
+  const bold = (value: number) => (
+    <span className="font-semibold text-gray-900">{number(value)}</span>
+  );
 
   return (
     <div className="flex items-center gap-4 text-sm text-gray-600">
       <span>
-        <span className="font-semibold text-gray-900">{stats.followerCount}</span>{" "}
-        {stats.followerCount === 1 ? "follower" : "followers"}
+        {formatWithElements(
+          t(
+            plural(stats.followerCount) === "one"
+              ? "followStats.followers.one"
+              : "followStats.followers.other"
+          ),
+          { count: bold(stats.followerCount) }
+        )}
       </span>
       <span>
-        <span className="font-semibold text-gray-900">{stats.followingCount}</span> following
+        {formatWithElements(
+          t(
+            plural(stats.followingCount) === "one"
+              ? "followStats.following.one"
+              : "followStats.following.other"
+          ),
+          { count: bold(stats.followingCount) }
+        )}
       </span>
       {!isOwnProfile && (
         <FollowButton

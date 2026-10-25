@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import axiosInstance from "./axiosinstance";
 import { NOTIFICATIONS_CHANGED } from "./useUnreadCount";
+import { tr } from "@/src/i18n/runtime";
 
 export type NotificationType = "like" | "comment" | "reply" | "mention" | "follow";
 
@@ -33,7 +34,7 @@ export function useNotifications(enabled: boolean) {
         setNextCursor(res.data.nextCursor);
       } catch (error) {
         console.log(error);
-        toast.error("Could not load notifications");
+        toast.error(tr("notifications.loadFailed"));
       } finally {
         setLoading(false);
       }
@@ -50,7 +51,7 @@ export function useNotifications(enabled: boolean) {
       setNextCursor(res.data.nextCursor);
     } catch (error) {
       console.log(error);
-      toast.error("Could not load more notifications");
+      toast.error(tr("notifications.loadMoreFailed"));
     } finally {
       setLoadingMore(false);
     }
@@ -78,7 +79,7 @@ export function useNotifications(enabled: boolean) {
       announceChange();
     } catch (error) {
       console.log(error);
-      toast.error("Could not mark all as read");
+      toast.error(tr("notifications.markAllFailed"));
     }
   }, []);
 

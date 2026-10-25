@@ -7,6 +7,7 @@ import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
 import { CodeSnippet, PostInput, PostType } from "@/src/lib/useFeed";
 import { imageUrl } from "@/src/lib/imageUrl";
+import { useLanguage } from "@/src/i18n/LanguageContext";
 
 const MAX_CONTENT = 2000;
 const MAX_IMAGES = 4;
@@ -32,10 +33,11 @@ interface PostComposerProps {
 
 export default function PostComposer({
   initial,
-  submitLabel = "Post",
+  submitLabel,
   onSubmit,
   onCancel,
 }: PostComposerProps) {
+  const { t } = useLanguage();
   const [content, setContent] = useState(initial?.content || "");
   const [type, setType] = useState<PostType>(initial?.type || "update");
   const [showCode, setShowCode] = useState(!!initial?.codeSnippet);
@@ -62,15 +64,15 @@ export default function PostComposer({
 
     for (const file of files) {
       if (!ALLOWED_TYPES.includes(file.type)) {
-        toast.error(`${file.name}: only JPG, PNG, WebP or GIF images`);
+        toast.error(t("composer.imageType", { name: file.name }));
         continue;
       }
       if (file.size > MAX_IMAGE_BYTES) {
-        toast.error(`${file.name} is larger than 5MB`);
+        toast.error(t("composer.imageTooBig", { name: file.name }));
         continue;
       }
       if (totalImages + accepted.length >= MAX_IMAGES) {
-        toast.error(`You can attach up to ${MAX_IMAGES} images`);
+        toast.error(t("composer.imageLimit", { max: MAX_IMAGES }));
         break;
       }
       accepted.push({ file, preview: URL.createObjectURL(file) });
@@ -112,7 +114,7 @@ export default function PostComposer({
         <Textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Share a technical update, project, or something you learned..."
+          placeholder={t("composer.placeholder")}
           maxLength={MAX_CONTENT}
           className="min-h-24 resize-none text-gray-900"
         />
@@ -122,13 +124,13 @@ export default function PostComposer({
             <Input
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              placeholder="Language (e.g. javascript, python)"
+              placeholder={t("composer.codeLanguagePlaceholder")}
               className="text-gray-900"
             />
             <Textarea
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="Paste your code here"
+              placeholder={t("composer.codePlaceholder")}
               className="min-h-32 font-mono text-sm resize-none text-gray-900"
             />
           </div>
@@ -141,12 +143,12 @@ export default function PostComposer({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imageUrl(path)}
-                  alt="Attached"
+                  alt={t("composer.imageAlt")}
                   className="w-full h-full object-cover rounded-md border"
                 />
                 <button
                   type="button"
-                  aria-label="Remove image"
+                  aria-label={t("composer.removeImage")}
                   onClick={() =>
                     setExistingImages((prev) => prev.filter((p) => p !== path))
                   }
@@ -161,12 +163,12 @@ export default function PostComposer({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={img.preview}
-                  alt="Selected"
+                  alt={t("composer.imageAlt")}
                   className="w-full h-full object-cover rounded-md border"
                 />
                 <button
                   type="button"
-                  aria-label="Remove image"
+                  aria-label={t("composer.removeImage")}
                   onClick={() => removeNewImage(index)}
                   className="absolute -top-1.5 -right-1.5 bg-gray-900 text-white rounded-full p-0.5"
                 >
@@ -193,10 +195,10 @@ export default function PostComposer({
               onChange={(e) => setType(e.target.value as PostType)}
               className="border rounded-md px-2 py-1 text-sm bg-white text-gray-900"
             >
-              <option value="update">Technical update</option>
-              <option value="snippet">Code snippet</option>
-              <option value="showcase">Project showcase</option>
-              <option value="achievement">Learning achievement</option>
+              <option value="update">{t("composer.type.update")}</option>
+              <option value="snippet">{t("composer.type.snippet")}</option>
+              <option value="showcase">{t("composer.type.showcase")}</option>
+              <option value="achievement">{t("composer.type.achievement")}</option>
             </select>
             <Button
               type="button"
@@ -205,7 +207,7 @@ export default function PostComposer({
               onClick={() => setShowCode((v) => !v)}
               className="text-gray-600"
             >
-              {showCode ? "Remove code" : "Add code"}
+              {showCode ? t("composer.removeCode") : t("composer.addCode")}
             </Button>
             <Button
               type="button"
@@ -216,7 +218,7 @@ export default function PostComposer({
               className="text-gray-600"
             >
               <ImagePlus className="w-4 h-4 mr-1" />
-              Images ({totalImages}/{MAX_IMAGES})
+              {t("composer.images", { count: totalImages, max: MAX_IMAGES })}
             </Button>
           </div>
 
@@ -226,7 +228,7 @@ export default function PostComposer({
             </span>
             {onCancel && (
               <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-                Cancel
+                {t("common.cancel")}
               </Button>
             )}
             <Button
@@ -236,7 +238,7 @@ export default function PostComposer({
               disabled={submitting || !content.trim()}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {submitting ? "Saving..." : submitLabel}
+              {submitting ? t("composer.saving") : submitLabel ?? t("composer.post")}
             </Button>
           </div>
         </div>

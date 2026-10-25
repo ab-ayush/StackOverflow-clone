@@ -28,28 +28,14 @@ import { toast } from "react-toastify";
 import ReputationActivity from "@/src/components/ReputationActivity";
 import ReputationTransfer from "@/src/components/ReputationTransfer";
 import FollowStats from "@/src/components/FollowStats";
-const getUserData = (id: string) => {
-  const users = {
-    "1": {
-      id: 1,
-      name: "John Doe",
-      joinDate: "2019-03-15",
-      about:
-        "Full-stack developer with 8+ years of experience in JavaScript, React, and Node.js. Passionate about clean code and helping others learn programming. I enjoy working on open-source projects and contributing to the developer community.",
-      tags: [
-        "javascript",
-        "react",
-        "node.js",
-        "typescript",
-        "python",
-        "mongodb",
-      ],
-    },
-  };
-  return users[id as keyof typeof users] || users["1"];
-};
+import { useLanguage } from "@/src/i18n/LanguageContext";
+import { useFormatters } from "@/src/i18n/useFormatters";
+import { apiErrorMessage } from "@/src/i18n/runtime";
+
 const index = () => {
   const { user, ChangePassword } = useAuth();
+  const { t } = useLanguage();
+  const { date, number } = useFormatters();
   const router = useRouter();
   const { id } = router.query;
   const [users, setusers] = useState<any>(null);
@@ -98,7 +84,13 @@ const index = () => {
     );
   }
   if (!users || users.length === 0) {
-    return <div className="text-center text-gray-500 mt-4">No user found.</div>;
+    return (
+      <Mainlayout>
+        <div className="text-center text-gray-500 mt-4">
+          {t("profile.notFound")}
+        </div>
+      </Mainlayout>
+    );
   }
 
   const handleSaveProfile = async () => {
@@ -117,11 +109,11 @@ const index = () => {
 
         setusers(updatedUser);
         setIsEditing(false);
-        toast.success("Profile updated successfully!");
+        toast.success(t("profile.updated"));
       }
     } catch (error: any) {
       console.log(error);
-      toast.error(error.response?.data?.message || "Something went wrong");
+      toast.error(apiErrorMessage(error));
     }
   };
 
@@ -141,7 +133,7 @@ const index = () => {
   };
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword) {
-      toast.error("Both fields are required");
+      toast.error(t("profile.bothFieldsRequired"));
       return;
     }
     await ChangePassword({ oldPassword, newPassword });
@@ -184,22 +176,24 @@ const index = () => {
                       className="flex items-center gap-2 bg-transparent"
                     >
                       <Edit className="w-4 h-4" />
-                      Edit Profile
+                      {t("profile.editButton")}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white text-gray-900">
                     <DialogHeader>
-                      <DialogTitle>Edit Profile</DialogTitle>
+                      <DialogTitle>{t("profile.editTitle")}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-6 py-4">
                       {/* Basic Information */}
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold">
-                          Basic Information
+                          {t("profile.basicInfo")}
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <Label htmlFor="name">Display Name</Label>
+                            <Label htmlFor="name">
+                              {t("profile.displayName")}
+                            </Label>
                             <Input
                               id="name"
                               value={editForm.name}
@@ -209,11 +203,13 @@ const index = () => {
                                   name: e.target.value,
                                 })
                               }
-                              placeholder="Your display name"
+                              placeholder={t("profile.displayNamePlaceholder")}
                             />
                           </div>
                           <div>
-                            <Label htmlFor="username">Username</Label>
+                            <Label htmlFor="username">
+                              {t("profile.username")}
+                            </Label>
                             <Input
                               id="username"
                               value={editForm.username}
@@ -225,21 +221,22 @@ const index = () => {
                                     .replace(/[^a-z0-9_]/g, ""),
                                 })
                               }
-                              placeholder="e.g. ayush_bisht"
+                              placeholder={t("profile.usernamePlaceholder")}
                               maxLength={20}
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              3-20 letters, numbers or underscores. Used for
-                              @mentions.
+                              {t("profile.usernameHint")}
                             </p>
                           </div>
                         </div>
                       </div>
                       {/* About Section */}
                       <div className="space-y-4">
-                        <h3 className="text-lg font-semibold">About</h3>
+                        <h3 className="text-lg font-semibold">
+                          {t("profile.aboutHeading")}
+                        </h3>
                         <div>
-                          <Label htmlFor="about">About Me</Label>
+                          <Label htmlFor="about">{t("profile.aboutMe")}</Label>
                           <Textarea
                             id="about"
                             value={editForm.about}
@@ -249,7 +246,7 @@ const index = () => {
                                 about: e.target.value,
                               })
                             }
-                            placeholder="Tell us about yourself, your experience, and interests..."
+                            placeholder={t("profile.aboutPlaceholder")}
                             className="min-h-32"
                           />
                         </div>
@@ -258,7 +255,7 @@ const index = () => {
                       {/* Tags/Skills Section */}
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold">
-                          Skills & Technologies
+                          {t("profile.skillsHeading")}
                         </h3>
 
                         <div className="space-y-3">
@@ -266,7 +263,7 @@ const index = () => {
                             <Input
                               value={newTag}
                               onChange={(e) => setNewTag(e.target.value)}
-                              placeholder="Add a skill or technology"
+                              placeholder={t("profile.addSkillPlaceholder")}
                               onKeyPress={(e) =>
                                 e.key === "Enter" && handleAddTag()
                               }
@@ -306,29 +303,31 @@ const index = () => {
                       {/* Change Password Section */}
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold">
-                          Change Password
+                          {t("profile.changePassword")}
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="oldPassword">
-                              Current Password
+                              {t("profile.currentPassword")}
                             </Label>
                             <Input
                               id="oldPassword"
                               type="password"
                               value={oldPassword}
                               onChange={(e) => setOldPassword(e.target.value)}
-                              placeholder="Enter current password"
+                              placeholder={t("profile.currentPasswordPlaceholder")}
                             />
                           </div>
                           <div>
-                            <Label htmlFor="newPassword">New Password</Label>
+                            <Label htmlFor="newPassword">
+                              {t("profile.newPassword")}
+                            </Label>
                             <Input
                               id="newPassword"
                               type="password"
                               value={newPassword}
                               onChange={(e) => setNewPassword(e.target.value)}
-                              placeholder="Enter new password"
+                              placeholder={t("profile.newPasswordPlaceholder")}
                             />
                           </div>
                         </div>
@@ -337,7 +336,7 @@ const index = () => {
                           variant="outline"
                           className="bg-orange-600 text-white"
                         >
-                          Update Password
+                          {t("profile.updatePassword")}
                         </Button>
                       </div>
 
@@ -348,13 +347,13 @@ const index = () => {
                           onClick={() => setIsEditing(false)}
                           className="bg-white text-gray-800 hover:text-gray-900"
                         >
-                          Cancel
+                          {t("common.cancel")}
                         </Button>
                         <Button
                           onClick={handleSaveProfile}
                           className="bg-blue-600 hover:bg-blue-700"
                         >
-                          Save Changes
+                          {t("profile.saveChanges")}
                         </Button>
                       </div>
                     </div>
@@ -365,32 +364,39 @@ const index = () => {
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-1" />
-                Member since{" "}
-                {new Date(users.joinDate).toISOString().split("T")[0]}
+                {t("profile.memberSince", { date: date(users.joinDate) })}
               </div>
               <FollowStats userId={users._id} isOwnProfile={isOwnProfile} />
             </div>
             <div className="flex flex-wrap items-center space-x-6 text-sm">
               <div className="flex items-center">
                 <span className="font-semibold text-lg text-blue-700">
-                  {users.reputation ?? 0}
+                  {number(users.reputation ?? 0)}
                 </span>
-                <span className="text-gray-600 ml-1">reputation</span>
+                <span className="text-gray-600 ml-1">
+                  {t("profile.reputation")}
+                </span>
               </div>
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
                 <span className="font-semibold">5</span>
-                <span className="text-gray-600 ml-1">gold badges</span>
+                <span className="text-gray-600 ml-1">
+                  {t("profile.goldBadges")}
+                </span>
               </div>
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
                 <span className="font-semibold">23</span>
-                <span className="text-gray-600 ml-1">silver badges</span>
+                <span className="text-gray-600 ml-1">
+                  {t("profile.silverBadges")}
+                </span>
               </div>
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-amber-600 rounded-full mr-2"></div>
                 <span className="font-semibold">45</span>
-                <span className="text-gray-600 ml-1">bronze badges</span>
+                <span className="text-gray-600 ml-1">
+                  {t("profile.bronzeBadges")}
+                </span>
               </div>
             </div>
           </div>
@@ -399,7 +405,7 @@ const index = () => {
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>About</CardTitle>
+                <CardTitle>{t("profile.aboutHeading")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
@@ -413,7 +419,7 @@ const index = () => {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Top Tags</CardTitle>
+                <CardTitle>{t("profile.topTags")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">

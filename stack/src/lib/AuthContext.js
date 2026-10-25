@@ -3,6 +3,7 @@ import { createContext } from "react";
 import axiosInstance from "./axiosinstance";
 import { toast } from "react-toastify";
 import { useContext } from "react";
+import { tr, trFor, apiErrorMessage, apiSuccessMessage } from "../i18n/runtime";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -28,11 +29,13 @@ export const AuthProvider = ({ children }) => {
       const { data, token } = res.data;
       localStorage.setItem("user", JSON.stringify({ ...data, token }));
       setUser(data);
-      toast.success("Signup Successful");
+      toast.success(trFor(data.preferredLanguage, "auth.signupSuccess"));
+      return true;
     } catch (error) {
-      const msg = error.response?.data.message || "Signup failed";
+      const msg = apiErrorMessage(error, "auth.signupFailed");
       seterror(msg);
       toast.error(msg);
+      return false;
     } finally {
       setloading(false);
     }
@@ -48,17 +51,17 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (res.data.requiresOtp) {
-        // don't log in yet — caller (login page) needs to show OTP screen
+        // don't log in yet, the login page shows the code screen
         return { requiresOtp: true, deviceId: res.data.deviceId };
       }
 
       const { data, token } = res.data;
       localStorage.setItem("user", JSON.stringify({ ...data, token }));
       setUser(data);
-      toast.success("Login Successful");
+      toast.success(trFor(data.preferredLanguage, "auth.loginSuccess"));
       return { requiresOtp: false };
     } catch (error) {
-      const msg = error.response?.data.message || "Login failed";
+      const msg = apiErrorMessage(error, "auth.loginFailed");
       seterror(msg);
       toast.error(msg);
       throw error;
@@ -79,9 +82,9 @@ export const AuthProvider = ({ children }) => {
       const { data, token } = res.data;
       localStorage.setItem("user", JSON.stringify({ ...data, token }));
       setUser(data);
-      toast.success("Device verified, logged in.");
+      toast.success(trFor(data.preferredLanguage, "auth.deviceVerified"));
     } catch (error) {
-      const msg = error.response?.data.message || "Verification failed";
+      const msg = apiErrorMessage(error, "auth.verificationFailed");
       seterror(msg);
       toast.error(msg);
       throw error;
@@ -97,9 +100,9 @@ export const AuthProvider = ({ children }) => {
       const res = await axiosInstance.post("/user/forgot-password", {
         email,
       });
-      toast.success(res.data.message || "New password sent to your email");
+      toast.success(apiSuccessMessage(res.data.message, "server.newPasswordSent"));
     } catch (error) {
-      const msg = error.response?.data.message || "Something went wrong";
+      const msg = apiErrorMessage(error);
       seterror(msg);
       toast.error(msg);
     } finally {
@@ -120,9 +123,9 @@ export const AuthProvider = ({ children }) => {
           },
         }
       );
-      toast.success(res.data.message || "Password changed successfully");
+      toast.success(apiSuccessMessage(res.data.message, "server.passwordChanged"));
     } catch (error) {
-      const msg = error.response?.data.message || "Something went wrong";
+      const msg = apiErrorMessage(error);
       seterror(msg);
       toast.error(msg);
     } finally {
@@ -133,7 +136,19 @@ export const AuthProvider = ({ children }) => {
   const Logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    toast.info("Logged out");
+    toast.info(tr("auth.loggedOut"));
+  };
+
+  const updateUser = (changes) => {
+    setUser((prev) => (prev ? { ...prev, ...changes } : prev));
+    try {
+      const stored = JSON.parse(localStorage.getItem("user") || "null");
+      if (stored) {
+        localStorage.setItem("user", JSON.stringify({ ...stored, ...changes }));
+      }
+    } catch (error) {
+      // a damaged saved entry is simply left alone
+    }
   };
 
   return (
@@ -146,6 +161,7 @@ export const AuthProvider = ({ children }) => {
         Logout,
         ForgotPassword,
         ChangePassword,
+        updateUser,
         loading,
         error,
       }}
