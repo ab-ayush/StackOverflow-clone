@@ -9,6 +9,7 @@ import { PostComment, ReplyState, useComments } from "@/src/lib/useComments";
 import { useLanguage } from "@/src/i18n/LanguageContext";
 import { useFormatters } from "@/src/i18n/useFormatters";
 import { formatWithElements } from "@/src/i18n/format";
+import UserPlanBadge from "@/src/components/UserPlanBadge";
 
 const MAX_COMMENT = 1000;
 
@@ -144,6 +145,7 @@ function CommentItem({
             ) : (
               <span className="text-sm font-medium text-gray-700">{authorName}</span>
             )}
+            <UserPlanBadge userId={comment.author?._id} />
             <span className="text-xs text-gray-500">
               {relativeTime(comment.createdAt)}
               {comment.editedAt ? ` · ${t("post.edited")}` : ""}

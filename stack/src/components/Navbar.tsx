@@ -4,18 +4,27 @@ import { useLanguage } from "@/src/i18n/LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { Bell, Menu, Search } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 const Navbar = ({ handleslidein }: any) => {
   const { user, Logout } = useAuth();
   const { t } = useLanguage();
+  const router = useRouter();
   const [hasMounted, setHasMounted] = useState(false);
+  const [searchText, setSearchText] = useState("");
   useEffect(() => {
     setHasMounted(true);
   }, []);
   const unread = useUnreadCount(hasMounted && !!user);
   const handlelogout = () => {
     Logout();
+  };
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchText.trim();
+    if (!q) return;
+    router.push({ pathname: "/search", query: { q } });
   };
   return (
     <div className=" top-0 z-50 w-full min-h-[53px] bg-white border-t-[3px] border-[#ef8236] shadow-[0_1px_5px_#00000033] flex items-center justify-center">
@@ -43,9 +52,14 @@ const Navbar = ({ handleslidein }: any) => {
               </Link>
             ))}
           </div>
-          <form className="hidden lg:block flex-grow relative px-3">
+          <form
+            onSubmit={submitSearch}
+            className="hidden lg:block flex-grow relative px-3"
+          >
             <input
               type="text"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               placeholder={t("nav.searchPlaceholder")}
               className="w-full max-w-[600px] pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
             />
@@ -53,6 +67,13 @@ const Navbar = ({ handleslidein }: any) => {
           </form>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/search"
+            aria-label={t("search.title")}
+            className="lg:hidden p-2 rounded-full hover:bg-gray-100 transition"
+          >
+            <Search className="w-5 h-5 text-gray-700" />
+          </Link>
           <LanguageSwitcher />
           {!hasMounted ? null : !user ? (
             <Link

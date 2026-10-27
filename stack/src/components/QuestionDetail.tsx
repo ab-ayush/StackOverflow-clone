@@ -24,6 +24,7 @@ import { useFormatters } from "@/src/i18n/useFormatters";
 import { formatWithElements } from "@/src/i18n/format";
 import { apiErrorMessage } from "@/src/i18n/runtime";
 import { renderMarkdown } from "@/src/lib/renderMarkdown";
+import UserPlanBadge from "@/src/components/UserPlanBadge";
 
 const QuestionDetail = ({ questionId }: any) => {
   const router = useRouter();
@@ -431,6 +432,7 @@ const QuestionDetail = ({ questionId }: any) => {
                       <div className="text-blue-600 hover:text-blue-800 font-medium">
                         {question.userposted}
                       </div>
+                      <UserPlanBadge userId={question.userid} />
                     </div>
                   </Link>
                 </div>
@@ -566,6 +568,7 @@ const QuestionDetail = ({ questionId }: any) => {
                             <div className="text-blue-600 hover:text-blue-800 font-medium">
                               {ans.useranswered}
                             </div>
+                            <UserPlanBadge userId={ans.userid} />
                           </div>
                         </Link>
                       </div>

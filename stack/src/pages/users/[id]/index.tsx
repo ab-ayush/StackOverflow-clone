@@ -28,6 +28,11 @@ import { toast } from "react-toastify";
 import ReputationActivity from "@/src/components/ReputationActivity";
 import ReputationTransfer from "@/src/components/ReputationTransfer";
 import FollowStats from "@/src/components/FollowStats";
+import SubscriptionCard from "@/src/components/SubscriptionCard";
+import PaymentHistory from "@/src/components/PaymentHistory";
+import BillingDetailsForm from "@/src/components/BillingDetailsForm";
+import PlanBadge from "@/src/components/PlanBadge";
+import { effectivePlan } from "@/src/lib/plans";
 import { useLanguage } from "@/src/i18n/LanguageContext";
 import { useFormatters } from "@/src/i18n/useFormatters";
 import { apiErrorMessage } from "@/src/i18n/runtime";
@@ -160,9 +165,15 @@ const index = () => {
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-1">
-                  {users.name}
-                </h1>
+                                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">
+                    {users.name}
+                  </h1>
+                  <PlanBadge
+                    plan={effectivePlan(users.plan, users.planExpiresAt)}
+                    size="md"
+                  />
+                </div>
                 {users.username && (
                   <p className="text-sm text-gray-500">@{users.username}</p>
                 )}
@@ -441,6 +452,13 @@ const index = () => {
                 </div>
               </CardContent>
             </Card>
+            {isOwnProfile && (
+              <>
+                <SubscriptionCard />
+                <PaymentHistory />
+                <BillingDetailsForm />
+              </>
+            )}
             {isOwnProfile && <SessionList />}
             <ReputationActivity userId={users._id} />
             {isOwnProfile && <ReputationTransfer />}

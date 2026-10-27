@@ -7,9 +7,12 @@ import { Textarea } from "@/src/components/ui/textarea";
 import Mainlayout from "@/src/layout/Mainlayout";
 import { useAuth } from "@/src/lib/AuthContext";
 import axiosInstance from "@/src/lib/axiosinstance";
+import { useUsage } from "@/src/lib/useUsage";
 import { useLanguage } from "@/src/i18n/LanguageContext";
+import { useFormatters } from "@/src/i18n/useFormatters";
 import { apiErrorMessage } from "@/src/i18n/runtime";
 import { Plus, X } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
@@ -18,12 +21,19 @@ const index = () => {
   const router = useRouter();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { number } = useFormatters();
+  const { usage, refresh: refreshUsage } = useUsage(!!user);
   const [formData, setFormData] = useState({
     title: "",
     body: "",
     tags: [] as string[],
   });
   const [newTag, setNewTag] = useState("");
+
+  const used = usage?.questions.used ?? 0;
+  const limit = usage ? usage.questions.limit : null; // null = unlimited
+  const limitReached = !!usage && limit !== null && used >= limit;
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -38,6 +48,7 @@ const index = () => {
       setFormData((prev) => ({ ...prev, [id]: value }));
     }
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -45,25 +56,34 @@ const index = () => {
       router.push("/auth");
       return;
     }
+    if (limitReached) return;
+
     try {
       const res = await axiosInstance.post("/question/ask", {
         postquestiondata: {
           questiontitle: formData.title,
           questionbody: formData.body,
           questiontags: formData.tags,
-          userposted: user.name,
-          userid: user?._id,
         },
       });
       if (res.data.data) {
         toast.success(t("ask.posted"));
         router.push("/");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      toast.error(apiErrorMessage(error));
+      if (error?.response?.data?.code === "QUESTION_LIMIT") {
+        // clicking the message opens the plans page
+        toast.error(t("limits.questionReached"), {
+          onClick: () => router.push("/pricing"),
+        });
+        refreshUsage();
+      } else {
+        toast.error(apiErrorMessage(error));
+      }
     }
   };
+
   const handleAddTag = (e: any) => {
     e.preventDefault();
     const trimmedTag = newTag.trim();
@@ -72,18 +92,51 @@ const index = () => {
       setNewTag("");
     }
   };
+
   const handleRemoveTag = (tagToRemove: string) => {
     setFormData({
       ...formData,
       tags: formData.tags.filter((tag: any) => tag !== tagToRemove),
     });
   };
+
   return (
     <Mainlayout>
       <div className="max-w-6xl mx-auto">
         <h1 className="text-xl lg:text-2xl font-semibold mb-6">
           {t("ask.heading")}
         </h1>
+
+        {usage && (
+          <div
+            className={`mb-4 rounded-md border px-4 py-3 text-sm ${
+              limitReached
+                ? "border-red-200 bg-red-50 text-red-800"
+                : "border-blue-200 bg-blue-50 text-blue-800"
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span>
+                {limitReached
+                  ? t("limits.questionReached")
+                  : limit === null
+                  ? t("limits.questionMeterUnlimited")
+                  : t("limits.questionMeter", {
+                      used: number(used),
+                      limit: number(limit),
+                    })}
+              </span>
+              {limit !== null && (
+                <Link href="/pricing" className="font-medium underline">
+                  {t("limits.upgradeCta")}
+                </Link>
+              )}
+            </div>
+            {limit !== null && (
+              <p className="mt-1 text-xs opacity-80">{t("limits.resets")}</p>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <Card>
@@ -173,7 +226,11 @@ const index = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                <Button type="submit" className="bg-blue-600 text-white">
+                <Button
+                  type="submit"
+                  disabled={limitReached}
+                  className="bg-blue-600 text-white"
+                >
                   {t("ask.review")}
                 </Button>
               </div>

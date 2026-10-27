@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "i18n", "locales");
 const LANGS = ["en", "es", "hi", "pt", "zh", "fr"];
+const NOT_PLURAL = new Set(["report.reason.other"]);
 
 const ONE_LINE = /^\s*"([^"]+)"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,?\s*$/;
 const KEY_ONLY = /^\s*"([^"]+)"\s*:\s*$/; // a formatter may move a long value to the next line
@@ -73,7 +74,11 @@ for (const lang of LANGS) {
     if (key.endsWith(".one") && !entries.has(key.replace(/\.one$/, ".other"))) {
       problem(`${key} has no matching .other`);
     }
-    if (key.endsWith(".other") && !entries.has(key.replace(/\.other$/, ".one"))) {
+    if (
+      key.endsWith(".other") &&
+      !NOT_PLURAL.has(key) &&
+      !entries.has(key.replace(/\.other$/, ".one"))
+    ) {
       problem(`${key} has no matching .one`);
     }
   }

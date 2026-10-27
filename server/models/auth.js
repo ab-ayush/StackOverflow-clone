@@ -19,6 +19,8 @@ const userschema = mongoose.Schema({
   },
   phone: { type: String, default: "" },
   reputation: { type: Number, default: 0 },
+  plan: { type: String, enum: ["free", "bronze", "silver", "gold"], default: "free" },
+  planExpiresAt: { type: Date, default: null },
   profileCompletionBonusAwarded: { type: Boolean, default: false },
 });
 

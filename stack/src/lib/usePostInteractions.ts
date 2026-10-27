@@ -63,7 +63,7 @@ export function usePostInteractions(
     [requireLogin, setPosts, patchPost]
   );
 
-  const toggleBookmark = useCallback(
+    const toggleBookmark = useCallback(
     async (id: string) => {
       if (!requireLogin()) return;
       const key = `bookmark:${id}`;
@@ -81,14 +81,21 @@ export function usePostInteractions(
         toast.success(
           res.data.bookmarked ? tr("post.bookmarkSaved") : tr("post.bookmarkRemoved")
         );
-      } catch (error) {
+      } catch (error: any) {
         setPosts((prev) => prev.map((p) => (p._id === id ? flipBookmark(p) : p))); // undo
-        toast.error(apiErrorMessage(error, "post.bookmarkFailed"));
+        if (error?.response?.data?.code === "BOOKMARK_LIMIT") {
+          // clicking the message opens the plans page
+          toast.error(tr("limits.bookmarkReached"), {
+            onClick: () => router.push("/pricing"),
+          });
+        } else {
+          toast.error(apiErrorMessage(error, "post.bookmarkFailed"));
+        }
       } finally {
         pending.current.delete(key);
       }
     },
-    [requireLogin, setPosts, patchPost, removeOnUnbookmark]
+    [requireLogin, setPosts, patchPost, removeOnUnbookmark, router]
   );
 
   const sharePost = useCallback(

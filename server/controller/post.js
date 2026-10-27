@@ -14,6 +14,8 @@ import {
   removeNotification,
 } from "../utils/notify.js";
 import PostReport from "../models/postReport.js";
+import User from "../models/auth.js";
+import { PLANS, effectivePlanId } from "../config/plans.js";
 
 const POST_TYPES = ["update", "snippet", "showcase", "achievement"];
 const MAX_CONTENT = 2000;
@@ -395,6 +397,20 @@ export const toggleBookmark = async (req, res) => {
       return res.status(404).json({ message: "post not found" });
     }
 
+    // free and Bronze accounts can only keep a limited number of bookmarks
+    const owner = await User.findById(req.userId).select("plan planExpiresAt");
+    const limit = PLANS[effectivePlanId(owner)].bookmarkLimit; // null = unlimited
+    if (limit !== null) {
+      const saved = await Bookmark.countDocuments({ user: req.userId });
+      if (saved >= limit) {
+        return res.status(403).json({
+          message: "Bookmark limit reached",
+          code: "BOOKMARK_LIMIT",
+          limit,
+        });
+      }
+    }
+
     try {
       await Bookmark.create({ user: req.userId, post: id });
     } catch (err) {
@@ -406,7 +422,6 @@ export const toggleBookmark = async (req, res) => {
     res.status(500).json("something went wrong..");
   }
 };
-
 // POST /post/share/:id  — counts once per logged-in user
 export const registerShare = async (req, res) => {
   const { id } = req.params;

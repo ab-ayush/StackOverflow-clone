@@ -13,6 +13,9 @@ import {
   Tag,
   Trophy,
   Users,
+  Gem,
+  Crown,
+  LifeBuoy,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -41,7 +44,7 @@ const Sidebar = ({ isopen }: any) => {
       <aside
         className={cn(
           " top-[53px]  w-48 lg:w-64 min-h-screen bg-white shadow-sm border-r transition-transform duration-200 ease-in-out md:translate-x-0",
-          isopen ? "translate-x-0" : "-translate-x-full"
+          isopen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <nav className="p-2 lg:p-4">
@@ -110,6 +113,24 @@ const Sidebar = ({ isopen }: any) => {
               <Link href="/saved" className={linkClass}>
                 <Bookmark className="w-4 h-4 mr-2 lg:mr-3" />
                 {t("sidebar.saves")}
+              </Link>
+            </li>
+            <li>
+              <Link href="/pricing" className={linkClass}>
+                <Gem className="w-4 h-4 mr-2 lg:mr-3" />
+                {t("sidebar.pricing")}
+              </Link>
+            </li>
+                        <li>
+              <Link href="/lounge" className={linkClass}>
+                <Crown className="w-4 h-4 mr-2 lg:mr-3" />
+                {t("sidebar.lounge")}
+              </Link>
+            </li>
+            <li>
+              <Link href="/support" className={linkClass}>
+                <LifeBuoy className="w-4 h-4 mr-2 lg:mr-3" />
+                {t("sidebar.support")}
               </Link>
             </li>
             <li>

@@ -8,6 +8,7 @@ import type { TranslationKey } from "@/src/i18n/translate";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import UserPlanBadge from "@/src/components/UserPlanBadge";
 
 export default function Home() {
   const [question, setquestion] = useState<any>(null);
@@ -172,6 +173,7 @@ export default function Home() {
                           <span className="text-blue-600 hover:text-blue-800 mr-1">
                             {question.userposted}
                           </span>
+                          <UserPlanBadge userId={question.userid} />
                         </Link>
 
                         <span>

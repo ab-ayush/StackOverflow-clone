@@ -24,6 +24,7 @@ import { imageUrl } from "@/src/lib/imageUrl";
 import { useLanguage } from "@/src/i18n/LanguageContext";
 import { useFormatters } from "@/src/i18n/useFormatters";
 import type { TranslationKey } from "@/src/i18n/translate";
+import UserPlanBadge from "@/src/components/UserPlanBadge";
 
 const typeLabelKeys: Record<string, TranslationKey> = {
   update: "composer.type.update",
@@ -113,11 +114,16 @@ export default function PostCard({
                     {authorName}
                   </Link>
                 ) : (
-                  <span className="font-medium text-gray-700">{authorName}</span>
+                  <span className="font-medium text-gray-700">
+                    {authorName}
+                  </span>
                 )}
                 {post.author?.username && (
-                  <span className="text-xs text-gray-500">@{post.author.username}</span>
+                  <span className="text-xs text-gray-500">
+                    @{post.author.username}
+                  </span>
                 )}
+                <UserPlanBadge userId={post.author?._id} />
                 {post.author && onFollow && !isSelf && (
                   <FollowButton
                     following={!!post.followingAuthor}
@@ -171,7 +177,9 @@ export default function PostCard({
 
         {post.codeSnippet && (
           <div>
-            <p className="text-xs text-gray-500 mb-1">{post.codeSnippet.language}</p>
+            <p className="text-xs text-gray-500 mb-1">
+              {post.codeSnippet.language}
+            </p>
             <pre className="bg-gray-100 text-gray-900 p-3 rounded-lg overflow-x-auto text-sm">
               <code>{post.codeSnippet.code}</code>
             </pre>
@@ -226,7 +234,9 @@ export default function PostCard({
               size="sm"
               onClick={() => onBookmark(post._id)}
               aria-label={
-                post.bookmarkedByMe ? t("post.removeBookmark") : t("post.bookmark")
+                post.bookmarkedByMe
+                  ? t("post.removeBookmark")
+                  : t("post.bookmark")
               }
               className={
                 post.bookmarkedByMe
@@ -256,7 +266,8 @@ export default function PostCard({
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  if (window.confirm(t("post.confirmDelete"))) onDelete(post._id);
+                  if (window.confirm(t("post.confirmDelete")))
+                    onDelete(post._id);
                 }}
                 className="text-red-600 hover:text-red-800"
               >
@@ -288,7 +299,11 @@ export default function PostCard({
         )}
 
         {reporting && (
-          <ReportPostDialog postId={post._id} open={reporting} onOpenChange={setReporting} />
+          <ReportPostDialog
+            postId={post._id}
+            open={reporting}
+            onOpenChange={setReporting}
+          />
         )}
       </CardContent>
     </Card>
