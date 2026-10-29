@@ -41,7 +41,7 @@ app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 app.use(cookieParser());
 app.use(cors({
-  origin: process.env.CLIENT_URL, // e.g. "http://localhost:3000"
+  origin: process.env.CLIENT_URL,
   credentials: true,
 }));
 app.get("/", (req, res) => {
