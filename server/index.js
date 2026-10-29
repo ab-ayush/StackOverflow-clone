@@ -40,10 +40,8 @@ app.use(
 app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 app.use(cookieParser());
-app.use(cors({
-  origin: process.env.CLIENT_URL,
-  credentials: true,
-}));
+const allowed = [process.env.CLIENT_URL, "http://localhost:3000"];
+app.use(cors({ origin: allowed, credentials: true }));
 app.get("/", (req, res) => {
   res.send("Stackoverflow clone is running perfect");
 });
