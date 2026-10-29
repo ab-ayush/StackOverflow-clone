@@ -40,7 +40,7 @@ export const Signup = async (req, res) => {
     const token = jwt.sign(
       { email: newuser.email, id: newuser._id },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
     res.status(200).json({ data: withoutPassword(newuser), token });
   } catch (error) {
@@ -60,13 +60,15 @@ export const Login = async (req, res) => {
 
     const ispasswordcrct = await bcrypt.compare(
       password,
-      exisitinguser.password
+      exisitinguser.password,
     );
     if (!ispasswordcrct) {
       return res.status(400).json({ message: "Invalid password" });
     }
     if (exisitinguser.suspendedAt) {
-      return res.status(403).json({ message: "Your account has been suspended" });
+      return res
+        .status(403)
+        .json({ message: "Your account has been suspended" });
     }
 
     const deviceInfo = getDeviceInfo(req);
@@ -96,7 +98,7 @@ export const Login = async (req, res) => {
       await sendEmail(
         email,
         "Verify new device login",
-        `A login was attempted from a new device (${deviceInfo.browser} on ${deviceInfo.os}, IP ${deviceInfo.ip}). Your verification code is ${otp}. It expires in 10 minutes.`
+        `A login was attempted from a new device (${deviceInfo.browser} on ${deviceInfo.os}, IP ${deviceInfo.ip}). Your verification code is ${otp}. It expires in 10 minutes.`,
       );
 
       return res.status(200).json({
@@ -110,15 +112,17 @@ export const Login = async (req, res) => {
     const { accessToken, refreshToken } = await createSessionAndTokens(
       exisitinguser,
       deviceId,
-      deviceInfo
+      deviceInfo,
     );
 
     setAuthCookies(res, { accessToken, refreshToken, deviceId });
 
-    res.status(200).json({ data: withoutPassword(exisitinguser), token: accessToken });
+    res
+      .status(200)
+      .json({ data: withoutPassword(exisitinguser), token: accessToken });
   } catch (error) {
-    res.status(500).json("something went wrong..");
-    return;
+    console.error("LOGIN ERROR:", error);
+    return res.status(500).json("something went wrong..");
   }
 };
 
@@ -133,7 +137,9 @@ export const RefreshAccessToken = async (req, res) => {
     try {
       decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     } catch (err) {
-      return res.status(401).json({ message: "Refresh token invalid or expired" });
+      return res
+        .status(401)
+        .json({ message: "Refresh token invalid or expired" });
     }
 
     const session = await Session.findOne({ refreshToken, user: decoded.id });
@@ -148,7 +154,7 @@ export const RefreshAccessToken = async (req, res) => {
     const newAccessToken = jwt.sign(
       { id: decoded.id, sessionId: session._id },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     const isProd = process.env.NODE_ENV === "production";
@@ -173,7 +179,9 @@ export const VerifyDeviceOtp = async (req, res) => {
       return res.status(404).json({ message: "User does not exist" });
     }
     if (exisitinguser.suspendedAt) {
-      return res.status(403).json({ message: "Your account has been suspended" });
+      return res
+        .status(403)
+        .json({ message: "Your account has been suspended" });
     }
 
     const record = await DeviceOtp.findOne({
@@ -190,7 +198,7 @@ export const VerifyDeviceOtp = async (req, res) => {
     const { accessToken, refreshToken } = await createSessionAndTokens(
       exisitinguser,
       deviceId,
-      deviceInfo
+      deviceInfo,
     );
 
     setAuthCookies(res, { accessToken, refreshToken, deviceId });
@@ -212,7 +220,7 @@ async function createSessionAndTokens(exisitinguser, deviceId, deviceInfo) {
   const refreshToken = jwt.sign(
     { id: exisitinguser._id },
     process.env.JWT_REFRESH_SECRET,
-    { expiresIn: "30d" }
+    { expiresIn: "30d" },
   );
 
   const session = await Session.create({
@@ -224,9 +232,13 @@ async function createSessionAndTokens(exisitinguser, deviceId, deviceInfo) {
   });
 
   const accessToken = jwt.sign(
-    { email: exisitinguser.email, id: exisitinguser._id, sessionId: session._id },
+    {
+      email: exisitinguser.email,
+      id: exisitinguser._id,
+      sessionId: session._id,
+    },
     process.env.JWT_SECRET,
-    { expiresIn: "15m" }
+    { expiresIn: "15m" },
   );
 
   return { accessToken, refreshToken };
@@ -249,7 +261,9 @@ export const updateprofile = async (req, res) => {
     return res.status(400).json({ message: "User unavailable" });
   }
   if (String(req.userId) !== String(_id)) {
-    return res.status(403).json({ message: "You can only edit your own profile" });
+    return res
+      .status(403)
+      .json({ message: "You can only edit your own profile" });
   }
 
   const changes = { name, about, tags };
@@ -257,12 +271,15 @@ export const updateprofile = async (req, res) => {
     const clean = normalizeUsername(username);
     if (!USERNAME_REGEX.test(clean)) {
       return res.status(400).json({
-        message: "Username must be 3-20 characters: letters, numbers or underscores",
+        message:
+          "Username must be 3-20 characters: letters, numbers or underscores",
       });
     }
     const taken = await user.exists({ username: clean, _id: { $ne: _id } });
     if (taken) {
-      return res.status(409).json({ message: "That username is already taken" });
+      return res
+        .status(409)
+        .json({ message: "That username is already taken" });
     }
     changes.username = clean;
   }
@@ -271,7 +288,7 @@ export const updateprofile = async (req, res) => {
     const updateprofile = await user.findByIdAndUpdate(
       _id,
       { $set: changes },
-      { new: true }
+      { new: true },
     );
 
     const isComplete =
@@ -292,7 +309,9 @@ export const updateprofile = async (req, res) => {
     res.status(200).json({ data: withoutPassword(updateprofile) });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(409).json({ message: "That username is already taken" });
+      return res
+        .status(409)
+        .json({ message: "That username is already taken" });
     }
     console.log(error);
     res.status(500).json("something went wrong..");
@@ -328,7 +347,7 @@ export const ForgotPassword = async (req, res) => {
     await sendEmail(
       email,
       "Your new password",
-      `Your password has been reset. Your new password is: ${newPassword}\n\nPlease log in and change it.`
+      `Your password has been reset. Your new password is: ${newPassword}\n\nPlease log in and change it.`,
     );
 
     res.status(200).json({ message: "New password sent to your email" });
