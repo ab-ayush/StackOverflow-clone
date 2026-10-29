@@ -277,3 +277,35 @@ export const getUsage = async (req, res) => {
     res.status(500).json("something went wrong..");
   }
 };
+// Razorpay calls this by itself after a payment, so a user who pays and closes the tab still gets the plan.
+export const razorpayWebhook = async (req, res) => {
+  try {
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    const signature = req.headers["x-razorpay-signature"];
+    if (!secret || !signature) return res.status(400).json({ message: "Invalid webhook" });
+
+    // req.body is the raw body here, exactly as Razorpay signed it
+    const expected = crypto.createHmac("sha256", secret).update(req.body).digest("hex");
+    const a = Buffer.from(expected);
+    const b = Buffer.from(String(signature));
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      return res.status(400).json({ message: "Invalid webhook" });
+    }
+
+    const event = JSON.parse(req.body.toString("utf8"));
+    if (event.event === "payment.captured" || event.event === "order.paid") {
+      const entity = event.payload?.payment?.entity;
+      if (entity?.order_id && entity?.id) {
+        const payment = await Payment.findOne({ razorpayOrderId: entity.order_id });
+        // the amount Razorpay reports must match the order we created
+        if (payment && entity.amount === payment.amount) {
+          await activatePayment(payment._id, entity.id);
+        }
+      }
+    }
+    res.status(200).json({ received: true });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Webhook error" });
+  }
+};

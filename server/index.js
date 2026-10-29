@@ -22,6 +22,7 @@ import languageRoutes from "./routes/language.js";
 import subscriptionRoutes from "./routes/subscription.js";
 import supportRoutes from "./routes/support.js";
 import loungeRoutes from "./routes/lounge.js";
+import { razorpayWebhook } from "./controller/subscription.js";
 
 const app = express();
 app.use(compression());
@@ -62,6 +63,7 @@ app.use('/language', languageRoutes)
 app.use("/subscription", subscriptionRoutes);
 app.use("/support", supportRoutes);
 app.use("/lounge", loungeRoutes);
+app.post("/subscription/webhook", express.raw({ type: "application/json" }), razorpayWebhook);
 const PORT = process.env.PORT || 5000;
 const databaseurl = process.env.MONGODB_URL;
 

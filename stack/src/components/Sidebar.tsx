@@ -2,20 +2,15 @@ import { cn } from "cn";
 import {
   Bell,
   Bookmark,
-  Bot,
-  Building,
-  FileText,
+  Crown,
+  Gem,
   Home,
-  MessageSquare,
+  LifeBuoy,
   MessageSquareIcon,
   Newspaper,
   Shield,
   Tag,
-  Trophy,
   Users,
-  Gem,
-  Crown,
-  LifeBuoy,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -40,11 +35,13 @@ const Sidebar = ({ isopen }: any) => {
   const unread = useUnreadCount(loggedIn);
 
   return (
-    <div>
+    // the wrapper is as tall as the page, so the background and the right border always run full height
+    <div className="shrink-0 border-r bg-white">
+      {/* the menu itself stays in view while the page scrolls */}
       <aside
         className={cn(
-          " top-[53px]  w-48 lg:w-64 min-h-screen bg-white shadow-sm border-r transition-transform duration-200 ease-in-out md:translate-x-0",
-          isopen ? "translate-x-0" : "-translate-x-full",
+          "sticky top-0 max-h-screen overflow-y-auto w-48 lg:w-64 bg-white shadow-sm transition-transform duration-200 ease-in-out md:translate-x-0",
+          isopen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <nav className="p-2 lg:p-4">
@@ -89,15 +86,6 @@ const Sidebar = ({ isopen }: any) => {
               </li>
             )}
             <li>
-              <Link href="#" className={linkClass}>
-                <Bot className="w-4 h-4 mr-2 lg:mr-3" />
-                {t("sidebar.aiAssist")}
-                <Badge variant="secondary" className="ml-auto text-xs">
-                  {t("sidebar.labs")}
-                </Badge>
-              </Link>
-            </li>
-            <li>
               <Link href="/tags" className={linkClass}>
                 <Tag className="w-4 h-4 mr-2 lg:mr-3" />
                 {t("sidebar.tags")}
@@ -121,7 +109,7 @@ const Sidebar = ({ isopen }: any) => {
                 {t("sidebar.pricing")}
               </Link>
             </li>
-                        <li>
+            <li>
               <Link href="/lounge" className={linkClass}>
                 <Crown className="w-4 h-4 mr-2 lg:mr-3" />
                 {t("sidebar.lounge")}
@@ -131,36 +119,6 @@ const Sidebar = ({ isopen }: any) => {
               <Link href="/support" className={linkClass}>
                 <LifeBuoy className="w-4 h-4 mr-2 lg:mr-3" />
                 {t("sidebar.support")}
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className={linkClass}>
-                <Trophy className="w-4 h-4 mr-2 lg:mr-3" />
-                {t("sidebar.challenges")}
-                <Badge
-                  variant="secondary"
-                  className="ml-auto text-xs bg-orange-100 text-orange-800"
-                >
-                  {t("sidebar.new")}
-                </Badge>
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className={linkClass}>
-                <MessageSquare className="w-4 h-4 mr-2 lg:mr-3" />
-                {t("sidebar.chat")}
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className={linkClass}>
-                <FileText className="w-4 h-4 mr-2 lg:mr-3" />
-                {t("sidebar.articles")}
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className={linkClass}>
-                <Building className="w-4 h-4 mr-2 lg:mr-3" />
-                {t("sidebar.companies")}
               </Link>
             </li>
           </ul>
