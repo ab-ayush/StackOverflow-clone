@@ -1,40 +1,48 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import crypto from "crypto";
-import { fileURLToPath } from "url";
+import { v2 as cloudinary } from "cloudinary";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-export const UPLOAD_DIR = path.join(__dirname, "..", "uploads", "posts");
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-const EXT_BY_MIME = {
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp",
-  "image/gif": ".gif",
-};
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  // random name + extension chosen by us, never the user's original filename
-  filename: (req, file, cb) =>
-    cb(null, `${crypto.randomUUID()}${EXT_BY_MIME[file.mimetype]}`),
-});
+const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(), // keep file in memory, not on disk
   limits: { fileSize: 5 * 1024 * 1024, files: 4 },
   fileFilter: (req, file, cb) => {
-    if (!EXT_BY_MIME[file.mimetype]) return cb(new Error("INVALID_IMAGE_TYPE"));
+    if (!ALLOWED.includes(file.mimetype)) return cb(new Error("INVALID_IMAGE_TYPE"));
     cb(null, true);
   },
 });
 
+const sendToCloudinary = (buffer) =>
+  new Promise((resolve, reject) => {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+    cloudinary.uploader
+      .upload_stream({ folder: "codequest/posts" }, (err, result) =>
+        err ? reject(err) : resolve(result)
+      )
+      .end(buffer);
+  });
+
 export const uploadPostImages = (req, res, next) => {
-  upload.array("images", 4)(req, res, (err) => {
-    if (!err) return next();
+  upload.array("images", 4)(req, res, async (err) => {
+    if (!err) {
+      try {
+        for (const file of req.files || []) {
+          const result = await sendToCloudinary(file.buffer);
+          file.path = result.secure_url; // full permanent https link
+          file.url = result.secure_url;
+          file.filename = result.public_id;
+          delete file.buffer;
+        }
+        return next();
+      } catch (e) {
+        console.error("CLOUDINARY ERROR:", e);
+        return res.status(500).json("something went wrong..");
+      }
+    }
 
     if (err instanceof multer.MulterError) {
       if (err.code === "LIMIT_FILE_SIZE") {

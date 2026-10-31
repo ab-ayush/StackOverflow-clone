@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
-import fs from "fs";
-import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 import Post from "../models/post.js";
 import Bookmark from "../models/bookmark.js";
-import { UPLOAD_DIR } from "../middleware/uploadImages.js";
 import Comment from "../models/comment.js";
 import Follow from "../models/follow.js";
 import { extractHashtags, resolveMentions } from "../utils/textParser.js";
@@ -23,7 +21,6 @@ const MAX_CODE = 5000;
 const MAX_IMAGES = 4;
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 30;
-const IMAGE_URL_PREFIX = "/uploads/posts/";
 
 // multipart fields arrive as strings; plain JSON requests arrive already parsed
 const parseJsonField = (value, fallback) => {
@@ -63,16 +60,34 @@ const validatePostFields = (body) => {
   return { text, type: body.type, snippet };
 };
 
-// delete files that were already saved for a request we are rejecting
-const discardUploads = (files = []) => {
-  files.forEach((f) => fs.promises.unlink(f.path).catch(() => {}));
+const configureCloudinary = () =>
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+
+// "https://res.cloudinary.com/x/image/upload/v123/codequest/posts/abc.jpg"
+// -> "codequest/posts/abc"
+const publicIdFromUrl = (url) => {
+  const m = String(url).match(/\/upload\/(?:v\d+\/)?(.+)\.[a-z0-9]+$/i);
+  return m ? m[1] : null;
 };
 
-// delete stored images by their saved "/uploads/posts/<name>" paths
-const deleteImageFiles = (paths = []) => {
-  paths.forEach((p) => {
-    const file = path.join(UPLOAD_DIR, path.basename(p));
-    fs.promises.unlink(file).catch(() => {});
+// remove images that were already uploaded for a request we are rejecting
+const discardUploads = (files = []) => {
+  configureCloudinary();
+  files.forEach((f) => {
+    if (f.filename) cloudinary.uploader.destroy(f.filename).catch(() => {});
+  });
+};
+
+// remove stored images by their saved URLs (old "/uploads/..." paths are skipped)
+const deleteImageFiles = (urls = []) => {
+  configureCloudinary();
+  urls.forEach((u) => {
+    const id = publicIdFromUrl(u);
+    if (id) cloudinary.uploader.destroy(id).catch(() => {});
   });
 };
 // deletes a post and everything that hangs off it
@@ -138,7 +153,7 @@ export const createPost = async (req, res) => {
       type: type || "update",
       content: text,
       codeSnippet: snippet,
-      images: files.map((f) => IMAGE_URL_PREFIX + f.filename),
+      images: files.map((f) => f.url),
       hashtags: extractHashtags(text),
       mentions,
     });
@@ -265,7 +280,7 @@ export const updatePost = async (req, res) => {
     const keep = Array.isArray(requestedKeep)
       ? existing.filter((p) => requestedKeep.includes(p))
       : existing;
-    const added = files.map((f) => IMAGE_URL_PREFIX + f.filename);
+    const added = files.map((f) => f.url);
 
     if (keep.length + added.length > MAX_IMAGES) {
       discardUploads(files);

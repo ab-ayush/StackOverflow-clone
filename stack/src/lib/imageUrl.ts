@@ -1,3 +1,2 @@
-// stored image paths look like "/uploads/posts/<name>.jpg"; prefix them with the backend URL
 export const imageUrl = (path: string) =>
-    `${(process.env.NEXT_PUBLIC_BACKEND_URL || "").replace(/\/$/, "")}${path}`;
+  path.startsWith("http") ? path : `${process.env.NEXT_PUBLIC_API_URL}${path}`;
