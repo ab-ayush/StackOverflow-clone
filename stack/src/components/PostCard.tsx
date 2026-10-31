@@ -99,13 +99,13 @@ export default function PostCard({
   return (
     <Card>
       <CardContent className="p-4 space-y-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-3">
             <Avatar className="w-9 h-9">
               <AvatarFallback>{authorName[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 {post.author ? (
                   <Link
                     href={`/users/${post.author._id}`}
@@ -186,7 +186,7 @@ export default function PostCard({
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-1 border-t">
+        <div className="flex flex-wrap items-center justify-between gap-1 pt-1 border-t">
           <div className="flex items-center gap-1 pt-1">
             <Button
               variant="ghost"

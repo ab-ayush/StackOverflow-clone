@@ -133,3 +133,11 @@ body {
     @apply bg-background text-foreground;
   }
 }
+/* long words and links wrap instead of pushing the page sideways; code blocks keep scrolling */
+main {
+  overflow-wrap: anywhere;
+}
+main pre,
+main code {
+  overflow-wrap: normal;
+}
