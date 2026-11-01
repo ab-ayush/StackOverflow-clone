@@ -57,9 +57,7 @@ const Mainlayout = ({ children }: MainlayoutProps) => {
       <div className="flex max-w-full py-1">
         <Sidebar isopen={sidebarOpen} onClose={closeSidebar} />
         <main className="flex-1 min-w-0 p-3 sm:p-4 lg:p-6 bg-white">{children}</main>
-        <div className="hidden lg:block border-1 borde-gray-200">
           <RightSideBar />
-        </div>
       </div>
     </div>
   );
