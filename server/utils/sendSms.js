@@ -3,6 +3,28 @@
 export const sendSms = async (to, body) => {
   const mode = (process.env.SMS_MODE || "console").toLowerCase();
 
+    if (mode === "textbee") {
+    const { TEXTBEE_API_KEY: apiKey, TEXTBEE_DEVICE_ID: deviceId } = process.env;
+    if (!apiKey || !deviceId) {
+      throw new Error("TextBee is selected but its environment variables are missing");
+    }
+
+    const response = await fetch(
+      `https://api.textbee.dev/api/v1/gateway/devices/${deviceId}/send-sms`,
+      {
+        method: "POST",
+        headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ recipients: [to], message: body }),
+        signal: AbortSignal.timeout(10000),
+      }
+    );
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      throw new Error(`TextBee error ${response.status}: ${detail}`);
+    }
+    return;
+  }
+
   if (mode === "twilio") {
     const {
       TWILIO_ACCOUNT_SID: sid,
