@@ -2,7 +2,7 @@ const MESSAGES = {
   en: {
     subject: "Your Code-Quest verification code",
     body: (code, minutes) =>
-      `Your verification code is ${code}. It expires in ${minutes} minutes. Never share this code with anyone.`,
+      `${code} is your CodeQuest code. Valid for ${minutes} minutes.`,
   },
   es: {
     subject: "Tu código de verificación de Code-Quest",
